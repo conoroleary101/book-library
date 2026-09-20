@@ -12,15 +12,15 @@ and oversees loans). Both sign in with their own `app_user` account.
 | FR-001 | Sign In              | As a user, I want to sign in with my username and password so that the system can tie every action I take to my account.                     | High     | Open   |
 | FR-002 | Sign Out             | As a user, I want to sign out so that nobody can use my session after I leave the computer.                                                  | High     | Open   |
 | FR-003 | Search Catalog       | As a member, I want to search the catalog by title or author so that I can find a book without asking the librarian.                         | High     | Open   |
-| FR-004 | See Book Availability| As a member, I want to see whether a book is currently on loan so that I know if I can borrow it now.                                        | High     | Open   |
-| FR-005 | Borrow Book          | As a member, I want to borrow an available book so that I can take it home and the system records the loan.                                  | High     | Open   |
+| FR-004 | See Book Availability| As a member, I want to see how many copies of a book are available out of the library's total holdings so that I know whether I can borrow one now. | High     | Open   |
+| FR-005 | Borrow Book          | As a member, I want to borrow a book that has at least one available copy so that I can take it home and the system records the loan.        | High     | Open   |
 | FR-006 | Return Book          | As a member, I want to return a book I borrowed so that it becomes available to other members.                                               | High     | Open   |
 | FR-007 | View My Loans        | As a member, I want to see the books I currently have on loan so that I know what I still have to return.                                    | High     | Open   |
 | FR-008 | View Active Loans    | As a librarian, I want to see all active loans with member and book so that I have a real time overview of who has which book.               | High     | Open   |
 | FR-009 | View Loan History    | As a librarian, I want to see past loans with borrow and return dates so that I can trace who borrowed a book and when.                      | Medium   | Open   |
-| FR-010 | Add Book             | As a librarian, I want to add a book to the catalog so that members can find and borrow it.                                                  | High     | Open   |
-| FR-011 | Edit Book            | As a librarian, I want to correct a book's details so that the catalog stays accurate.                                                       | Medium   | Open   |
-| FR-012 | Remove Book          | As a librarian, I want to remove a book that is not on loan so that the catalog does not list books the library no longer owns.              | Medium   | Open   |
+| FR-010 | Add Book             | As a librarian, I want to add a book with the number of copies the library holds so that members can find and borrow it.                     | High     | Open   |
+| FR-011 | Edit Book            | As a librarian, I want to correct a book's details, including its copies count, so that the catalog stays accurate.                          | Medium   | Open   |
+| FR-012 | Remove Book          | As a librarian, I want to remove a book that has no open loans so that the catalog does not list books the library no longer owns.           | Medium   | Open   |
 | FR-013 | Create Member Account| As a librarian, I want to create a member account with a username, password, and profile so that a new patron can sign in and borrow books.  | High     | Open   |
 | FR-014 | List Members         | As a librarian, I want to see all members so that I can find the patron I need to work with.                                                 | Medium   | Open   |
 | FR-015 | Edit Member Profile  | As a librarian, I want to update a member's name and email so that the member record stays current.                                          | Low      | Open   |
@@ -66,21 +66,21 @@ and oversees loans). Both sign in with their own `app_user` account.
 | C-015 | Single Branch           | The system must support exactly one library branch.                                                                      | Business    | High     | Open   |
 | C-016 | No Self Service Signup  | The system must not offer self service sign-up, password reset, or social login; the librarian creates all accounts.     | Business    | High     | Open   |
 | C-017 | Seeded Librarian        | A first librarian account must be seeded on startup so the application is usable on first boot.                          | Technical   | High     | Open   |
+| C-018 | Book Copies             | A book must carry a total copies count; available copies must be derived as copies minus open loans and must not be stored as its own column. | Technical   | High     | Open   |
+| C-019 | No Due Dates            | A loan must have no due date; it must record a borrow timestamp and a return timestamp only.                             | Business    | High     | Open   |
 
 ## Open Questions
 
 These could not be derived from the vision or the existing code and need a decision before
 the affected requirements are final:
 
-1. **Loan period.** Is there a due date, and how long is a loan? The vision mentions no due
-   dates and explicitly excludes fines (C-013), so FR-005 currently records only a borrow
-   date. Confirm whether a due date is needed.
-2. **Borrow limit.** `docs/architecture.md` uses "a member may not have more than five open
+1. **Borrow limit.** `docs/architecture.md` uses "a member may not have more than five open
    loans" as an *example* of business logic, not as a decision. Confirm whether a limit
    exists and what the number is.
-3. **Multiple copies.** Does a book have one physical copy or several? This decides whether
-   FR-004 is a boolean available/on-loan flag or a copy count, and it drives the entity model.
-4. **Search fields.** FR-003 assumes title and author. Confirm whether ISBN, publisher, or
+2. **Search fields.** FR-003 assumes title and author. Confirm whether ISBN, publisher, or
    year should also be searchable.
-5. **Budget and deadline.** No budget limit or delivery date is stated in the vision, so no
+3. **Load figures.** The 5,000-book catalog in NFR-001 and the 50 concurrent users in
+   NFR-003 are placeholders — neither is stated in the vision. Confirm both against the
+   real library size and expected usage, since they set the performance test targets.
+4. **Budget and deadline.** No budget limit or delivery date is stated in the vision, so no
    corresponding constraint was written.
