@@ -5,45 +5,26 @@ actor "Member" as member
 actor "Librarian" as librarian
 
 rectangle "SimpleLibrary" {
-    usecase "UC-001\nSign In" as UC001
-    usecase "UC-002\nSign Out" as UC002
-    usecase "UC-003\nSearch Catalog" as UC003
-    usecase "UC-004\nBorrow Book" as UC004
-    usecase "UC-005\nReturn Book" as UC005
-    usecase "UC-006\nView My Loans" as UC006
-    usecase "UC-007\nView Active Loans" as UC007
-    usecase "UC-008\nView Loan History" as UC008
-    usecase "UC-009\nAdd Book" as UC009
-    usecase "UC-010\nEdit Book" as UC010
-    usecase "UC-011\nRemove Book" as UC011
-    usecase "UC-012\nCreate Member Account" as UC012
-    usecase "UC-013\nList Members" as UC013
-    usecase "UC-014\nEdit Member Profile" as UC014
+    usecase "UC-001\nSearch Catalog\n<size:10>FR-003, FR-004</size>" as UC001
+    usecase "UC-002\nBorrow Book\n<size:10>FR-005</size>" as UC002
+    usecase "UC-003\nReturn Book\n<size:10>FR-006</size>" as UC003
+    usecase "UC-004\nView My Loans\n<size:10>FR-007</size>" as UC004
+    usecase "UC-005\nReview Loans\n<size:10>FR-008, FR-009</size>" as UC005
+    usecase "UC-006\nManage Catalog\n<size:10>FR-010, FR-011, FR-012</size>" as UC006
+    usecase "UC-007\nManage Members\n<size:10>FR-013, FR-014, FR-015</size>" as UC007
 }
 
 member --> UC001
 member --> UC002
 member --> UC003
 member --> UC004
-member --> UC005
-member --> UC006
 
 librarian --> UC001
 librarian --> UC002
 librarian --> UC003
+librarian --> UC004
+librarian --> UC005
+librarian --> UC006
 librarian --> UC007
-librarian --> UC008
-librarian --> UC009
-librarian --> UC010
-librarian --> UC011
-librarian --> UC012
-librarian --> UC013
-librarian --> UC014
-
-note bottom of UC004
-  A librarian is an app_user with no member row
-  and therefore cannot borrow or return books.
-  Only Member reaches UC-004, UC-005 and UC-006.
-end note
 
 @enduml

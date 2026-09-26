@@ -117,8 +117,10 @@ Authentication and authorization are part of the architecture, not a separate fe
 - **`member` is a domain entity, not the identity.** Once the `member` feature is
   introduced (during the tutorial), the `member` table carries the patron's profile
   (name, email, …) and a `user_id` foreign key into `app_user`. A librarian is an
-  `app_user` with role `LIBRARIAN` and **no** `member` row — librarians do not borrow
-  books, so they do not need a patron profile.
+  `app_user` with role `LIBRARIAN`. Whether they also have a `member` row is independent
+  of the role: a librarian who borrows books holds one alongside their librarian account,
+  exactly like any other patron, and reaches the member-facing views through it. A
+  librarian who never borrows simply has no `member` row.
 - **Loans reference `member.id`, not `app_user.id`.** A loan belongs to a library
   patron, which is a `member`. The path from "currently logged-in user" to "their
   loans" goes through `member.user_id`.
@@ -174,8 +176,10 @@ the navigation in `MainLayout` does not need its own access checks.
 
 - **Identity vs. domain are different concerns.** Mixing `username`/`password_hash`
   into `member` couples a domain entity to authentication mechanics. Splitting them
-  means we can change auth (OAuth, SSO, …) without touching the patron model, and we
-  can have non-patron users (the librarian) without inventing a fake `member` row.
+  means we can change auth (OAuth, SSO, …) without touching the patron model, and that
+  having a patron profile is a separate question from being able to sign in. A librarian
+  who never borrows needs no `member` row; one who does borrow gains it without any
+  change to how they authenticate or what role they carry.
 - **Declarative access on views.** `@RolesAllowed` keeps the rule next to the view it
   protects and lets Vaadin handle menu visibility for free.
 - **Scoping in the domain.** Putting the "only my loans" rule in the service means the

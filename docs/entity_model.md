@@ -30,8 +30,6 @@ Holds authentication data only: the credentials and role a person signs in with 
 | role          | Access level granted to the user       | String    | 20               | Not Null, Values: MEMBER, LIBRARIAN |
 | created_at    | Moment the account was created         | DateTime  | -                | Not Null                        |
 
-**Constraints:** A librarian is an APP_USER with role LIBRARIAN and no MEMBER row; librarians do not borrow books.
-
 ### MEMBER
 
 The library patron profile belonging to a person who borrows books.
@@ -44,7 +42,7 @@ The library patron profile belonging to a person who borrows books.
 | email      | Contact address of the patron           | String    | 255              | Not Null, Format: Email           |
 | created_at | Moment the patron record was created    | DateTime  | -                | Not Null                          |
 
-**Constraints:** user_id is unique — an APP_USER is linked to at most one MEMBER. The linked APP_USER must have role MEMBER.
+**Constraints:** user_id is unique — an APP_USER is linked to at most one MEMBER.
 
 ### BOOK
 

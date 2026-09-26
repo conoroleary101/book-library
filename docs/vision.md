@@ -28,6 +28,8 @@ keeps a clear history of who borrowed what and when.
 - Keep the system small and easy to maintain.
 - Make sure every action is tied to a known user, and that librarian-only screens
   are reachable only by librarians.
+- Let a librarian borrow books like any other member. A librarian who wants to borrow has
+  a member profile alongside their librarian account; nothing about the role prevents it.
 
 ## Non Goals
 

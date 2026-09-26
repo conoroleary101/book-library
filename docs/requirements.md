@@ -25,6 +25,12 @@ and oversees loans). Both sign in with their own `app_user` account.
 | FR-014 | List Members         | As a librarian, I want to see all members so that I can find the patron I need to work with.                                                 | Medium   | Open   |
 | FR-015 | Edit Member Profile  | As a librarian, I want to update a member's name and email so that the member record stays current.                                          | Low      | Open   |
 
+> **FR-001 and FR-002 trace to the starter, not to a use case.** Signing in and signing out
+> are satisfied by the pre-seeded security that ships with the project
+> (`V001__create_app_user.sql`, `SecuritySeed`, and the `@RolesAllowed` rules in
+> `docs/architecture.md`). Being authenticated is a precondition on every use case rather
+> than a goal in its own right, so neither requirement appears in `docs/use_cases.puml`.
+
 ## Non-Functional Requirements
 
 | ID      | Title                  | Requirement                                                                                                                                         | Category        | Priority | Status |
