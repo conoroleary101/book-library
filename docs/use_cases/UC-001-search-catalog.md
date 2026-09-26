@@ -36,7 +36,7 @@
 **Trigger:** The book the member wants has no copy available (step 5)  
 **Flow:**
 
-1. System shows the book with zero copies available out of its total holdings.
+1. System shows the book with zero copies available out of its total holdings, emphasised so that it stands out from the books that can be borrowed.
 2. Member sees that the book cannot be borrowed at the moment.
 3. Use case ends.
 
@@ -105,3 +105,7 @@ Titles are ordered using the database's default collation, which compares them w
 ### BR-007: Titles Sort Exactly as Written
 
 A title is ordered on its full text, leading article included. "The Hobbit" sorts under T, not under H. No article is stripped before comparing, and the catalog holds no separate sort title alongside the displayed one.
+
+### BR-008: No Available Copy Is Emphasised
+
+A book with no copy available is shown with visual emphasis that sets it apart from the books that can be borrowed, so a member scanning the list sees what is unavailable without reading every figure. The emphasis is in addition to the count required by BR-003 and never replaces it: the figures stay on the row whether the book can be borrowed or not.
