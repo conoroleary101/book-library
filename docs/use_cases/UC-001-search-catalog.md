@@ -90,3 +90,11 @@ Any signed-in user may search the catalog, whether they hold a member account or
 ### BR-005: A Book May Have No ISBN
 
 The ISBN of a book is optional. A book recorded without one shows an empty ISBN cell in the catalog and in the search results. It is never shown with a placeholder value, and a missing ISBN never keeps the book out of a result it otherwise matches.
+
+### BR-006: Titles Are Compared Case-Insensitively
+
+Titles are ordered using the database's default collation, which compares them without regard to case, so "the hobbit" and "The Hobbit" take the same position. That collation also disregards spaces and punctuation while comparing, so "An Beal Bocht" sorts before "A Wizard of Earthsea" — the two are compared as "anbealbocht" against "awizardofearthsea". The catalog listing and every search result use this same ordering.
+
+### BR-007: Titles Sort Exactly as Written
+
+A title is ordered on its full text, leading article included. "The Hobbit" sorts under T, not under H. No article is stripped before comparing, and the catalog holds no separate sort title alongside the displayed one.

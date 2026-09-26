@@ -1,0 +1,12 @@
+/* ------------------------------------------------------------------- catalog */
+
+/* Availability reads as "available of total", so the figures line up column-wise. */
+.app-availability {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Every copy on loan: the row the member cannot borrow from right now. */
+.app-availability-none {
+  color: var(--vaadin-text-color-danger, #c2403d);
+  font-weight: 600;
+}
