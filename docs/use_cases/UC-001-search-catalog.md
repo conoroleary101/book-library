@@ -48,10 +48,12 @@
 1. System displays an empty catalog and a message stating that no books have been added yet.
 2. Use case ends.
 
-> **Not covered by the browserless suite.** `DemoDataSeed` runs in every Spring test
-> context and guarantees a populated catalog, so a browserless test cannot reach this flow
-> without emptying the catalog and breaking the fixtures the other tests depend on. A3 is
-> deferred to the Playwright layer, where the test controls its own dataset.
+> **Not covered by any automated test yet.** `DemoDataSeed` runs in every Spring test
+> context — browserless and Playwright alike, since both are `@SpringBootTest` — and
+> guarantees a populated catalog. Neither layer can reach this flow without emptying the
+> catalog and breaking the fixtures the other tests depend on. Covering A3 needs a way to
+> remove books, which arrives with UC-006 Manage Catalog; until then the flow is specified
+> but unverified.
 
 ### A4: Member Clears the Search Term
 
