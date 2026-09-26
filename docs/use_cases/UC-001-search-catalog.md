@@ -15,9 +15,9 @@
 ## Main Success Scenario
 
 1. Member opens the catalog.
-2. System displays the books in the catalog, each with its title, author, total copies held, and copies currently available.
+2. System displays the books in the catalog, sorted by title in ascending order, each with its title, author, ISBN, total copies held, and copies currently available.
 3. Member enters a search term matching a title or an author.
-4. System displays only the books whose title or author matches the search term, each with its total copies held and copies currently available.
+4. System displays only the books whose title or author matches the search term, sorted by title in ascending order, each with its title, author, ISBN, total copies held, and copies currently available.
 5. Member identifies the book they were looking for and reads how many of its copies are available to borrow.
 
 ## Alternative Flows
@@ -53,7 +53,7 @@
 **Trigger:** Member empties the search term after a search (step 4)  
 **Flow:**
 
-1. System displays the whole catalog again, each book with its total copies held and copies currently available.
+1. System displays the whole catalog again, in the same order and with the same columns as in step 2.
 2. Use case continues at step 3.
 
 ## Postconditions
@@ -73,7 +73,7 @@
 
 ### BR-001: Search Scope
 
-The search term is matched against the title and the author of a book. No other field takes part in the search.
+The search term is matched against the title and the author of a book, ignoring case and matching any part of the value, so "tolk" finds "Tolkien". No other field takes part in the search: the ISBN shown in the results is displayed only, not searched.
 
 ### BR-002: Availability Is Derived
 
@@ -86,3 +86,7 @@ Availability is always presented as the number of available copies out of the to
 ### BR-004: The Catalog Is Visible to Every Signed-In User
 
 Any signed-in user may search the catalog, whether they hold a member account or a librarian account. The catalog carries no per-user restriction.
+
+### BR-005: A Book May Have No ISBN
+
+The ISBN of a book is optional. A book recorded without one shows an empty ISBN cell in the catalog and in the search results. It is never shown with a placeholder value, and a missing ISBN never keeps the book out of a result it otherwise matches.

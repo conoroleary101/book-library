@@ -74,6 +74,7 @@ and oversees loans). Both sign in with their own `app_user` account.
 | C-017 | Seeded Librarian        | A first librarian account must be seeded on startup so the application is usable on first boot.                          | Technical   | High     | Open   |
 | C-018 | Book Copies             | A book must carry a total copies count; available copies must be derived as copies minus open loans and must not be stored as its own column. | Technical   | High     | Open   |
 | C-019 | No Due Dates            | A loan must have no due date; it must record a borrow timestamp and a return timestamp only.                             | Business    | High     | Open   |
+| C-020 | Search Fields           | The catalog search must match title and author only. ISBN is displayed but not searched, and publisher and year are out of scope for this version and are not modelled on BOOK (see UC-001 BR-001). | Business    | High     | Open   |
 
 ## Open Questions
 
@@ -83,10 +84,8 @@ the affected requirements are final:
 1. **Borrow limit.** `docs/architecture.md` uses "a member may not have more than five open
    loans" as an *example* of business logic, not as a decision. Confirm whether a limit
    exists and what the number is.
-2. **Search fields.** FR-003 assumes title and author. Confirm whether ISBN, publisher, or
-   year should also be searchable.
-3. **Load figures.** The 5,000-book catalog in NFR-001 and the 50 concurrent users in
+2. **Load figures.** The 5,000-book catalog in NFR-001 and the 50 concurrent users in
    NFR-003 are placeholders — neither is stated in the vision. Confirm both against the
    real library size and expected usage, since they set the performance test targets.
-4. **Budget and deadline.** No budget limit or delivery date is stated in the vision, so no
+3. **Budget and deadline.** No budget limit or delivery date is stated in the vision, so no
    corresponding constraint was written.
