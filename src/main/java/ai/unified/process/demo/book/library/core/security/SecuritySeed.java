@@ -3,6 +3,7 @@ package ai.unified.process.demo.book.library.core.security;
 import org.jooq.DSLContext;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -12,9 +13,15 @@ import static ai.unified.process.demo.book.library.db.Tables.APP_USER;
  * Seeds a librarian and a member user on first start so the app is usable out of the box.
  * Idempotent: it only inserts rows whose username is missing, so the runner can fire on
  * every boot in dev without producing duplicates.
+ * <p>
+ * Ordered first: identity has to exist before any seed that hangs domain rows off an
+ * {@code app_user} row (see {@code DemoDataSeed}).
  */
 @Component
+@Order(SecuritySeed.ORDER)
 public class SecuritySeed implements ApplicationRunner {
+
+	public static final int ORDER = 10;
 
 	private final DSLContext dsl;
 
