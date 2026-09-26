@@ -4,6 +4,7 @@ import ai.unified.process.demo.book.library.catalog.domain.Book;
 import ai.unified.process.demo.book.library.core.ui.AbstractBrowserlessTest;
 import ai.unified.process.demo.book.library.usecase.UseCase;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.textfield.TextField;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -145,6 +146,57 @@ class UC001SearchCatalogTest extends AbstractBrowserlessTest {
 	}
 
 	@Test
+	@UseCase(id = "UC-001", scenario = "A1: No Book Matches the Search Term")
+	void correcting_an_unmatched_search_term_searches_again() {
+		navigate(CatalogView.class);
+
+		searchFor("qqqzzz");
+		assertThat(test(catalogGrid()).size()).isZero();
+
+		// A1 step 2: the member corrects the term. Step 3: the search runs again.
+		searchFor("hobbit");
+
+		assertThat(titlesInGridOrder()).containsExactly("The Hobbit");
+		// The search that found nothing changed nothing either: availability is
+		// untouched.
+		assertThat(test(catalogGrid()).getCellText(0, AVAILABLE)).isEqualTo("1 of 3");
+	}
+
+	@Test
+	@UseCase(id = "UC-001", scenario = "A2: Every Copy Is on Loan", businessRules = { "BR-008" })
+	void book_with_no_available_copy_is_set_apart() {
+		navigate(CatalogView.class);
+
+		searchFor("left hand");
+		var grid = catalogGrid();
+		// Materialise the row so its rendered components are in the tree.
+		test(grid).getRow(0);
+
+		// Read the cell first: that is what renders a component column into the tree.
+		// test(grid).getRow(0) alone does not, and the lookup below then finds nothing.
+		assertThat(test(grid).getCellText(0, AVAILABLE)).isEqualTo("0 of 1");
+
+		// BR-008: emphasised, and the count above shows the emphasis adds to BR-003
+		// rather than replacing it.
+		assertThat(find(Span.class, grid).withClassName("app-availability-none").exists()).isTrue();
+	}
+
+	@Test
+	@UseCase(id = "UC-001", businessRules = { "BR-008" })
+	void book_that_can_be_borrowed_is_not_set_apart() {
+		navigate(CatalogView.class);
+
+		searchFor("hobbit");
+		var grid = catalogGrid();
+		assertThat(test(grid).getCellText(0, AVAILABLE)).isEqualTo("1 of 3");
+
+		// An availability span is present, so the check below is not vacuous...
+		assertThat(find(Span.class, grid).withClassName("app-availability").exists()).isTrue();
+		// ...and a borrowable book carries no emphasis.
+		assertThat(find(Span.class, grid).withClassName("app-availability-none").exists()).isFalse();
+	}
+
+	@Test
 	@UseCase(id = "UC-001", scenario = "A2: Every Copy Is on Loan", businessRules = { "BR-003" })
 	void book_with_every_copy_on_loan_shows_none_available() {
 		navigate(CatalogView.class);
@@ -168,6 +220,8 @@ class UC001SearchCatalogTest extends AbstractBrowserlessTest {
 
 		assertThat(test(catalogGrid()).size()).isEqualTo(9);
 		assertThat(titlesInGridOrder()).startsWith("An Beal Bocht", "A Wizard of Earthsea");
+		// Searching only reads: the availability figures are what they were at step 2.
+		assertThat(test(catalogGrid()).getCellText(rowOf("The Hobbit"), AVAILABLE)).isEqualTo("1 of 3");
 	}
 
 	@Test
