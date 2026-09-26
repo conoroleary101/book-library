@@ -1,0 +1,5 @@
+# The JVM reads .mvn/jvm.config line by line. With CRLF endings each flag arrives as
+# "...=ALL-UNNAMED\r", the JVM rejects it as an unknown module, ErrorProne then cannot
+# reach the javac internals it needs, and the build fails with an unexplained
+# "An unknown compilation problem occurred". Keep it LF on every platform.
+.mvn/jvm.config text eol=lf
