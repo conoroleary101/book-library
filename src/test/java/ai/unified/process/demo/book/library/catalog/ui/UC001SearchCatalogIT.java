@@ -1,6 +1,7 @@
 package ai.unified.process.demo.book.library.catalog.ui;
 
 import ai.unified.process.demo.book.library.core.ui.PlaywrightIT;
+import ai.unified.process.demo.book.library.usecase.UseCase;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.assertions.PlaywrightAssertions;
 import com.microsoft.playwright.options.AriaRole;
@@ -47,6 +48,7 @@ class UC001SearchCatalogIT extends PlaywrightIT {
 	class Listing {
 
 		@Test
+		@UseCase(id = "UC-001", businessRules = { "BR-006", "BR-007" })
 		@DisplayName("lists every book, titles ordered by the database collation (BR-006, BR-007)")
 		void lists_every_book_sorted_by_title() {
 			var grid = openCatalogAs(MEMBER);
@@ -61,6 +63,7 @@ class UC001SearchCatalogIT extends PlaywrightIT {
 		}
 
 		@Test
+		@UseCase(id = "UC-001", businessRules = { "BR-003" })
 		@DisplayName("shows title, author, ISBN and availability for a book (BR-003)")
 		void shows_all_four_columns() {
 			var grid = searchAs(MEMBER, "hobbit");
@@ -74,6 +77,7 @@ class UC001SearchCatalogIT extends PlaywrightIT {
 		}
 
 		@Test
+		@UseCase(id = "UC-001", businessRules = { "BR-005" })
 		@DisplayName("shows an empty ISBN cell for a book recorded without one (BR-005)")
 		void book_without_isbn_shows_an_empty_cell() {
 			var grid = searchAs(MEMBER, "dubliners");
@@ -91,6 +95,7 @@ class UC001SearchCatalogIT extends PlaywrightIT {
 	class Searching {
 
 		@Test
+		@UseCase(id = "UC-001", businessRules = { "BR-001" })
 		@DisplayName("matches part of an author, ignoring case (BR-001)")
 		void partial_author_match_ignores_case() {
 			var grid = searchAs(MEMBER, "TOLK");
@@ -101,6 +106,7 @@ class UC001SearchCatalogIT extends PlaywrightIT {
 		}
 
 		@Test
+		@UseCase(id = "UC-001", businessRules = { "BR-001" })
 		@DisplayName("matches part of a title, ignoring case (BR-001)")
 		void partial_title_match_ignores_case() {
 			var grid = searchAs(MEMBER, "EARTHSEA");
@@ -110,6 +116,7 @@ class UC001SearchCatalogIT extends PlaywrightIT {
 		}
 
 		@Test
+		@UseCase(id = "UC-001", businessRules = { "BR-001" })
 		@DisplayName("does not search the ISBN, though it is displayed (BR-001)")
 		void isbn_is_displayed_but_not_searched() {
 			var grid = searchAs(MEMBER, "9780261102217");
@@ -118,6 +125,7 @@ class UC001SearchCatalogIT extends PlaywrightIT {
 		}
 
 		@Test
+		@UseCase(id = "UC-001", scenario = "A1: No Book Matches the Search Term")
 		@DisplayName("A1: reports that nothing matches the search term")
 		void unmatched_term_reports_no_match() {
 			var grid = searchAs(MEMBER, "qqqzzz");
@@ -127,6 +135,7 @@ class UC001SearchCatalogIT extends PlaywrightIT {
 		}
 
 		@Test
+		@UseCase(id = "UC-001", scenario = "A4: Member Clears the Search Term")
 		@DisplayName("A4: clearing the term brings the whole catalog back")
 		void clearing_the_term_restores_the_catalog() {
 			var grid = searchAs(MEMBER, "tolk");
@@ -144,6 +153,7 @@ class UC001SearchCatalogIT extends PlaywrightIT {
 	class Access {
 
 		@Test
+		@UseCase(id = "UC-001", businessRules = { "BR-004" })
 		@DisplayName("a librarian reaches the same catalog as a member (BR-004)")
 		void librarian_can_search_the_catalog() {
 			var grid = openCatalogAs(LIBRARIAN);
@@ -158,6 +168,7 @@ class UC001SearchCatalogIT extends PlaywrightIT {
 	class EveryCopyOnLoan {
 
 		@Test
+		@UseCase(id = "UC-001", scenario = "A2: Every Copy Is on Loan", businessRules = { "BR-003", "BR-008" })
 		@DisplayName("shows none available out of the total held")
 		void shows_none_available() {
 			var grid = searchAs(MEMBER, "left hand");

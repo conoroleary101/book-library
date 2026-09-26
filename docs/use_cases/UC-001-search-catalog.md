@@ -6,7 +6,13 @@
 **Use Case Name:** Search Catalog  
 **Primary Actor:** Member  
 **Goal:** Find a book in the library catalog and see how many of its copies are available to borrow  
-**Status:** Draft
+**Status:** Tested
+
+> **A3 is the single known exception.** The use case is fully implemented, and every step,
+> alternative flow, postcondition and business rule has at least one asserting test at the
+> browserless layer, the Playwright layer, or both — except A3 (catalog is empty), which
+> stays unverified until UC-006 Manage Catalog provides a way to remove books. See the note
+> on A3 below.
 
 ## Preconditions
 
