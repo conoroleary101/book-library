@@ -2,6 +2,10 @@ package ai.unified.process.demo.book.library.catalog.ui;
 
 import ai.unified.process.demo.book.library.catalog.domain.Book;
 import ai.unified.process.demo.book.library.catalog.domain.BookRepository;
+import ai.unified.process.demo.book.library.loan.domain.LoanService;
+import ai.unified.process.demo.book.library.loan.ui.BorrowDialog;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -36,15 +40,19 @@ public class CatalogView extends VerticalLayout {
 
 	private final transient BookRepository bookRepository;
 
+	private final transient LoanService loanService;
+
 	private final TextField searchField = new TextField();
 
 	private final Grid<Book> grid = new Grid<>();
 
-	public CatalogView(BookRepository bookRepository) {
+	public CatalogView(BookRepository bookRepository, LoanService loanService) {
 		this.bookRepository = bookRepository;
+		this.loanService = loanService;
 		setSizeFull();
 		configureSearchField();
 		configureGrid();
+		configureBorrowColumn();
 		add(searchField, grid);
 		refresh();
 	}
@@ -69,6 +77,21 @@ public class CatalogView extends VerticalLayout {
 		grid.addColumn(book -> Objects.requireNonNullElse(book.isbn(), "")).setHeader("ISBN").setAutoWidth(true);
 		grid.addComponentColumn(CatalogView::availability).setHeader("Available").setAutoWidth(true);
 		grid.setSizeFull();
+	}
+
+	private void configureBorrowColumn() {
+		grid.addComponentColumn(book -> {
+			if (book.availableCopies() <= 0) {
+				return new Span();
+			}
+			var button = new Button("Borrow");
+			button.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SMALL);
+			button.addClickListener(event -> {
+				var dialog = new BorrowDialog(book.id(), book.title(), loanService, this::refresh);
+				dialog.open();
+			});
+			return button;
+		}).setHeader("").setAutoWidth(true).setFlexGrow(0);
 	}
 
 	private void refresh() {

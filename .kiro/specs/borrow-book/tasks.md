@@ -36,8 +36,8 @@ No new Flyway migration is required — the `loan` table already exists at V004.
     - Constructor: `NoAvailableCopyException(long bookId)` — message: `"No available copy for book.id=" + bookId`
     - _Requirements: 1.5 (A1 — all copies on loan)_
 
-- [ ] 3. Implement `LoanRepository`
-  - [ ] 3.1 Create `LoanRepository.java` annotated with `@Repository`
+- [x] 3. Implement `LoanRepository`
+  - [x] 3.1 Create `LoanRepository.java` annotated with `@Repository`
     - Constructor-inject `DSLContext dsl`
     - Implement `findMemberIdByAppUserId(long appUserId)` — returns `@Nullable Long`
       - `SELECT MEMBER.ID FROM MEMBER WHERE MEMBER.USER_ID = appUserId`
@@ -52,8 +52,8 @@ No new Flyway migration is required — the `loan` table already exists at V004.
     - Add Javadoc referencing UC-002, BR-009, BR-010
     - _Requirements: 1.1, 1.2, 1.5, 1.6 (BR-009 atomic check), 1.7 (BR-010 member identity)_
 
-- [ ] 4. Implement `LoanService`
-  - [ ] 4.1 Create `LoanService.java` annotated with `@Service`
+- [x] 4. Implement `LoanService`
+  - [x] 4.1 Create `LoanService.java` annotated with `@Service`
     - Constructor-inject `LoanRepository loanRepository` and `CurrentUser currentUser`
     - Implement `@Transactional void borrow(long bookId)`
       - Call `currentUser.requireAppUserId()` to get the signed-in user's `app_user.id`
@@ -64,13 +64,13 @@ No new Flyway migration is required — the `loan` table already exists at V004.
     - Add Javadoc referencing UC-002, BR-009, BR-010, C-009
     - _Requirements: 1.1, 1.2, 1.5, 1.6, 1.7_
 
-- [ ] 5. Checkpoint — domain layer complete
+- [x] 5. Checkpoint — domain layer complete
   - Run `.\mvnw spring-javaformat:apply` to auto-format all new files (formatter check runs in the `validate` phase, before compile)
   - Run `.\mvnw compile` to confirm no build errors
   - Fix any Error Prone / NullAway warnings before proceeding (the build is `failOnWarning=true`)
 
-- [ ] 6. Implement `BorrowDialog`
-  - [ ] 6.1 Create `BorrowDialog.java` in `loan/ui`
+- [x] 6. Implement `BorrowDialog`
+  - [x] 6.1 Create `BorrowDialog.java` in `loan/ui`
     - Extends `com.vaadin.flow.component.confirmdialog.ConfirmDialog`
     - Constructor: `BorrowDialog(long bookId, String title, LoanService loanService, Runnable onSuccess)`
     - Dialog header: `"Borrow \"" + title + "\"?"`
@@ -83,8 +83,8 @@ No new Flyway migration is required — the `loan` table already exists at V004.
     - Do **not** catch any other exception — let it propagate to Vaadin's error boundary
     - _Requirements: 1.3 (confirmation), 1.4 (BR-011 onSuccess triggers grid refresh), 1.5 (A1 error), 1.7 (A2 error)_
 
-- [ ] 7. Update `CatalogView` to add the Borrow button column
-  - [ ] 7.1 Modify `CatalogView.java`
+- [x] 7. Update `CatalogView` to add the Borrow button column
+  - [x] 7.1 Modify `CatalogView.java`
     - Add `private final transient LoanService loanService;` field
     - Update the constructor signature to `CatalogView(BookRepository bookRepository, LoanService loanService)`
     - Store `this.loanService = loanService` in the constructor body
@@ -98,7 +98,7 @@ No new Flyway migration is required — the `loan` table already exists at V004.
     - Import `com.vaadin.flow.component.button.Button`, `com.vaadin.flow.component.button.ButtonVariant`, and `ai.unified.process.demo.book.library.loan.ui.BorrowDialog`
     - _Requirements: 1.1 (Borrow button entry point), 1.3, 1.4 (BR-011 refresh after borrow)_
 
-- [ ] 8. Checkpoint — full feature compile and smoke
+- [x] 8. Checkpoint — full feature compile and smoke
   - Run `.\mvnw spring-javaformat:apply` to auto-format all new and modified files (formatter check runs in the `validate` phase, before compile)
   - Run `.\mvnw compile` to confirm no build errors
   - Verify no ArchUnit violations are anticipated: `loan/ui` imports `loan/domain` (allowed); `catalog/ui` imports `loan/ui` through `BorrowDialog` — this is a cross-feature UI dependency and must be reviewed against the architecture rules in `structure.md` before proceeding
