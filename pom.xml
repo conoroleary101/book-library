@@ -37,7 +37,13 @@
         <nullaway.version>0.13.8</nullaway.version>
         <spring-javaformat-maven-plugin.version>0.0.47</spring-javaformat-maven-plugin.version>
 
-        <db.image>postgres:latest</db.image>
+        <!-- Image for the build-time container that Flyway and jOOQ code generation run
+             against. Pinned to an explicit major version, and it must stay in step with
+             the runtime test container in TestcontainersConfiguration: generating code
+             against one PostgreSQL version and testing against another is a difference
+             that surfaces as puzzling test failures rather than as a build error. The
+             version also fixes the default collation, which UC-001 BR-006 depends on. -->
+        <db.image>postgres:18</db.image>
         <db.username>ai.unified.process.demo.book.library</db.username>
         <db.password>secret</db.password>
     </properties>
@@ -304,6 +310,26 @@
                                     <packageName>ai.unified.process.demo.book.library.db</packageName>
                                 </target>
                             </generator>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Register jOOQ output as a source folder so IDEs that don't run codegen still see it -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <id>add-jooq-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>${project.build.directory}/generated-sources/jooq</source>
+                            </sources>
                         </configuration>
                     </execution>
                 </executions>
