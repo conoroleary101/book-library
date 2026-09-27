@@ -12,16 +12,16 @@ No new Flyway migration is required — the `loan` table already exists at V004.
 
 ## Tasks
 
-- [ ] 1. Create the `loan/domain` package skeleton
-  - [ ] 1.1 Create `loan/domain/package-info.java`
+- [x] 1. Create the `loan/domain` package skeleton
+  - [x] 1.1 Create `loan/domain/package-info.java`
     - Annotate with `@NullMarked` from `org.jspecify.annotations`
     - Package: `ai.unified.process.demo.book.library.loan.domain`
     - _Requirements: 1.2 (identity separation — loans belong to the domain layer)_
-  - [ ] 1.2 Create `loan/ui/package-info.java`
+  - [x] 1.2 Create `loan/ui/package-info.java`
     - Annotate with `@NullMarked` from `org.jspecify.annotations`
     - Package: `ai.unified.process.demo.book.library.loan.ui`
     - _Requirements: 1.2_
-  - [ ] 1.3 Create `Loan.java` domain record
+  - [x] 1.3 Create `Loan.java` domain record
     - Fields: `Long id`, `Long memberId`, `Long bookId`, `LocalDateTime borrowedAt`, `@Nullable LocalDateTime returnedAt`
     - No jOOQ or Vaadin types in the record — plain Java only
     - _Requirements: 1.2, 1.8 (no due date field)_
