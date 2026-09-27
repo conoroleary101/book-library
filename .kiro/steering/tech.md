@@ -64,7 +64,7 @@ Do **not** use `spring-boot:run` locally, even though it is the POM's default go
 ### Unit / Browserless UI Tests (`*Test.java`)
 - Extend `AbstractBrowserlessTest` → `SpringBrowserlessTest`.
 - Full Spring context with a real Testcontainers PostgreSQL database.
-- Use `@WithMockUser` for security context.
+- Use `@WithUserDetails("<username>")` with a seeded account for any test that goes through `CurrentUser`. `@WithMockUser`  has no `appUserId` and will fail there.
 - Navigate and assert on Vaadin component trees without a browser.
 - `DemoDataSeed` runs automatically, seeding 9 books and 4 loans designed to cover all UC-001 business rules.
 
