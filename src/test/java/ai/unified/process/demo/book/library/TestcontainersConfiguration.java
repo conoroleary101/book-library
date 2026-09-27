@@ -16,6 +16,11 @@ public class TestcontainersConfiguration {
 	 * with, so a floating tag could break the tests without a single change to the
 	 * project. Change this version deliberately, and re-run UC001SearchCatalogTest and
 	 * UC001SearchCatalogIT when you do.
+	 * <p>
+	 * Keep this in step with the {@code db.image} property in {@code pom.xml}, which is
+	 * the same image for the build-time container that Flyway and jOOQ code generation
+	 * use. Generating code against one version and testing against another is a mismatch
+	 * the build will not report.
 	 */
 	@Bean
 	@ServiceConnection
