@@ -26,12 +26,12 @@ No new Flyway migration is required — the `loan` table already exists at V004.
     - No jOOQ or Vaadin types in the record — plain Java only
     - _Requirements: 1.2, 1.8 (no due date field)_
 
-- [ ] 2. Create the domain exception types
-  - [ ] 2.1 Create `NoMemberProfileException.java`
+- [x] 2. Create the domain exception types
+  - [x] 2.1 Create `NoMemberProfileException.java`
     - Extends `RuntimeException`
     - Constructor: `NoMemberProfileException(long appUserId)` — message: `"No member profile linked to app_user.id=" + appUserId`
     - _Requirements: 1.7 (A2 — no member row)_
-  - [ ] 2.2 Create `NoAvailableCopyException.java`
+  - [x] 2.2 Create `NoAvailableCopyException.java`
     - Extends `RuntimeException`
     - Constructor: `NoAvailableCopyException(long bookId)` — message: `"No available copy for book.id=" + bookId`
     - _Requirements: 1.5 (A1 — all copies on loan)_
