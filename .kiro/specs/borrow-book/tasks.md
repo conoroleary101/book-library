@@ -1,4 +1,4 @@
-# Implementation Plan: UC-002 Borrow Book
+﻿# Implementation Plan: UC-002 Borrow Book
 
 ## Overview
 
@@ -127,7 +127,7 @@ No new Flyway migration is required — the `loan` table already exists at V004.
   - [ ]* 9.2 Verify `UC002BorrowBookTest` passes
     - Run `.\mvnw test -Dtest=UC002BorrowBookTest`
     - All tests green; no Error Prone warnings; no data leaking between tests
-  - [ ] 9.3 Canary check — verify the concurrency test detects missing guards
+  - [x] 9.3 Canary check — verify the concurrency test detects missing guards
     - Temporarily remove `.forUpdate()` from `LoanRepository.borrowAtomically()` (comment it out)
     - Run `.\mvnw test -Dtest=UC002BorrowBookTest#concurrent_borrow_creates_exactly_one_loan*`
     - Confirm the test fails (more loans than `book.copies` created)
@@ -137,6 +137,11 @@ No new Flyway migration is required — the `loan` table already exists at V004.
     - Confirm the test fails (lock released between SELECT and INSERT, race observed)
     - Restore `@Transactional`
     - Record both results in a code comment on the test method
+    - **Results (2026-10-03):**
+      - `.forUpdate()` removed: FAIL -- `[open loans must equal min(copies, threads)] expected: 1 but was: 5; expected: 3 but was: 5`
+      - `@Transactional` removed: FAIL -- same counts
+      - Both restored: PASS
+      - Formatter check skipped with `-Dspring-javaformat.skip=true` for the mutation runs only
 
 - [ ] 10. Write parameterised property tests — `UC002BorrowBookParameterizedTest`
   - [ ] 10.1 Create `UC002BorrowBookParameterizedTest.java` in `src/test/.../loan/domain/`
