@@ -6,13 +6,16 @@
 **Use Case Name:** Borrow Book  
 **Primary Actor:** Member  
 **Goal:** Borrow an available copy of a book so that the system records the loan against the member's own patron profile  
-**Status:** Implemented
+**Status:** Tested
 
 > **Derived from `.kiro/specs/borrow-book/` and verified against the implementation.**
 > Business rule identifiers are scoped to this use case and restart at BR-001, as the AI
 > Unified Process requires; the original Kiro numbering is noted on each rule so the
 > mapping back to that document is not lost. A librarian borrows exactly as a member does,
 > through the patron profile linked to their account.
+>
+> Every step, alternative flow, postcondition and business rule has an asserting test,
+> with the exceptions recorded under Open Points below.
 
 ## Preconditions
 
@@ -63,6 +66,15 @@
 3. System records no loan for the later request, leaving the total number of open loans no greater than the copies held.
 4. Use case ends.
 
+### A4: Member Abandons the Confirmation
+
+**Trigger:** Member cancels the confirmation instead of confirming it (step 2)  
+**Flow:**
+
+1. System closes the confirmation and takes no further action.
+2. System records no loan and shows the member no message, the request having been abandoned rather than refused.
+3. Use case ends.
+
 ## Postconditions
 
 ### Success Postconditions
@@ -77,7 +89,7 @@
 - No loan is recorded
 - The book's available-copy count is unchanged
 - The member's existing loans are unchanged
-- The actor is told why the book could not be borrowed
+- The actor is told why the book could not be borrowed, unless they abandoned the request themselves (A4)
 
 ## Business Rules
 
@@ -116,3 +128,21 @@
 ### BR-009: The Borrow Action Is Offered Only When a Copy Is Free
 
 *No Kiro equivalent — recorded from the implementation.* A book with no copy available offers no borrow action on its catalog row, so A1 is normally prevented rather than reported. A1 remains reachable when the last copy is taken between the catalog being drawn and the request arriving, which is A3.
+
+## Open Points
+
+1. **Post-F-3 is asserted narrowly.** The rejected-borrow test checks that the open-loan
+   count for the book in question is unchanged, but the postcondition is about the
+   member's loans as a whole. No code path writes another book's loans, so this is a
+   narrow assertion rather than a missing guarantee.
+2. **The fee and fine half of Post-S-3 is schema-guaranteed, not asserted.** No loan
+   column and no entity exists that could hold a fee or a fine, so there is nothing for a
+   test to observe. The no-due-date half is asserted.
+3. **A request for a book that no longer exists is reported as "no copy available."** The
+   message misstates the cause, and no flow of this use case describes a vanished book.
+   It cannot arise today, because nothing deletes books — it becomes a live defect as soon
+   as UC-006 Manage Catalog adds deletion, and should be resolved as part of that work.
+4. **The `Loan` record in `loan/domain` is unused.** Nothing returns or reads it, although
+   the package documentation presents it as part of the domain layer. Either a read path
+   was dropped or the record is dead code; the package documentation is inaccurate either
+   way.

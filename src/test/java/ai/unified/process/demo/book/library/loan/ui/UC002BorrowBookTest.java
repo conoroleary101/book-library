@@ -326,6 +326,56 @@ class UC002BorrowBookTest extends AbstractBrowserlessTest {
 	}
 
 	// -------------------------------------------------------------------------
+	// Alternative flow A4 — member abandons the confirmation
+	// -------------------------------------------------------------------------
+
+	@Test
+	@UseCase(id = "UC-002", scenario = "A4: Member Abandons the Confirmation")
+	void cancelling_the_confirmation_records_nothing_and_says_nothing() {
+		String prefix = UUID.randomUUID().toString();
+		long bookId = insertTestBook(prefix, 2);
+
+		navigate(CatalogView.class);
+		searchFor(prefix);
+
+		var grid = catalogGrid();
+		assertThat(test(grid).getCellText(0, AVAILABLE_COL)).isEqualTo("2 of 2");
+
+		// Render the cell once and keep the button: asking for the cell again renders a
+		// second Borrow button into the tree and the lookup then finds two.
+		test(grid).getCellText(0, BORROW_COL);
+		Button borrow = find(Button.class, grid).withText("Borrow").single();
+		test(borrow).click();
+
+		// The dialog really is on screen before anything is asserted about its absence of
+		// output. Without this, every assertion below would also pass if the Borrow
+		// button
+		// had silently done nothing at all.
+		ConfirmDialog dialog = find(ConfirmDialog.class).single();
+		assertThat(dialog.isOpened()).as("the confirmation is open before it is cancelled").isTrue();
+		assertThat(find(Notification.class).exists()).as("nothing is shown before the member decides").isFalse();
+
+		test(dialog).cancel();
+
+		// Cancelling did something: the dialog closed in response.
+		assertThat(dialog.isOpened()).as("the confirmation closed on cancel").isFalse();
+
+		// A4: no loan, and no message of either kind — the request was abandoned, not
+		// refused, so there is nothing to explain.
+		assertThat(countOpenLoans(bookId)).isZero();
+		assertThat(find(Notification.class).exists()).as("no confirmation and no error after cancelling").isFalse();
+		assertThat(test(grid).getCellText(0, AVAILABLE_COL)).isEqualTo("2 of 2");
+
+		// Positive control for the two assertions above: the same Notification query must
+		// be able to find a message in this very test, or "no message" proves nothing.
+		test(borrow).click();
+		test(find(ConfirmDialog.class).single()).confirm();
+		assertThat(find(Notification.class).exists()).as("the same query does find a message when one is shown")
+			.isTrue();
+		assertThat(countOpenLoans(bookId)).isEqualTo(1);
+	}
+
+	// -------------------------------------------------------------------------
 	// Alternative flow A3 — concurrent borrows (atomicity canary)
 	// -------------------------------------------------------------------------
 
