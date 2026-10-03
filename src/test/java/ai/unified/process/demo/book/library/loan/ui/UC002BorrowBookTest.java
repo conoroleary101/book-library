@@ -22,6 +22,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithUserDetails;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -30,6 +31,7 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -60,13 +62,17 @@ class UC002BorrowBookTest extends AbstractBrowserlessTest {
 
 	private static final int AVAILABLE_COL = 3;
 
+	private static final int BORROW_COL = 4;
+
 	@Autowired
 	private LoanService loanService;
 
 	@Autowired
 	private DSLContext dsl;
 
-	/** Tracks all book IDs created by test methods so {@link #cleanup()} can remove them. */
+	/**
+	 * Tracks all book IDs created by test methods so {@link #cleanup()} can remove them.
+	 */
 	private final Set<Long> testBookIds = new HashSet<>();
 
 	// -------------------------------------------------------------------------
@@ -148,10 +154,9 @@ class UC002BorrowBookTest extends AbstractBrowserlessTest {
 		searchFor(prefix);
 
 		var grid = catalogGrid();
-		// Materialise the row so component columns are rendered into the tree.
-		test(grid).getRow(0);
-
-		assertThat(find(Button.class, grid).withText("Borrow").exists()).isTrue();
+		// Asking for the cell renders its component; getRow(0) alone does not (see
+		// UC001SearchCatalogTest).
+		assertThat(test(grid).getCellText(0, BORROW_COL)).isEqualTo("Borrow");
 	}
 
 	@Test
@@ -165,10 +170,7 @@ class UC002BorrowBookTest extends AbstractBrowserlessTest {
 		searchFor(prefix);
 
 		var grid = catalogGrid();
-		// Materialise the row so component columns are rendered.
-		test(grid).getRow(0);
-
-		assertThat(find(Button.class, grid).withText("Borrow").exists()).isFalse();
+		assertThat(test(grid).getCellText(0, BORROW_COL)).isEmpty();
 	}
 
 	// -------------------------------------------------------------------------
@@ -185,7 +187,7 @@ class UC002BorrowBookTest extends AbstractBrowserlessTest {
 		searchFor(prefix);
 
 		var grid = catalogGrid();
-		test(grid).getRow(0);
+		test(grid).getCellText(0, BORROW_COL);
 
 		// Click the Borrow button to open the confirmation dialog.
 		test(find(Button.class, grid).withText("Borrow").single()).click();
@@ -214,7 +216,7 @@ class UC002BorrowBookTest extends AbstractBrowserlessTest {
 		// Verify initial availability.
 		assertThat(test(grid).getCellText(0, AVAILABLE_COL)).isEqualTo("2 of 2");
 
-		test(grid).getRow(0);
+		test(grid).getCellText(0, BORROW_COL);
 		test(find(Button.class, grid).withText("Borrow").single()).click();
 		test(find(ConfirmDialog.class).single()).confirm();
 
@@ -289,8 +291,7 @@ class UC002BorrowBookTest extends AbstractBrowserlessTest {
 
 	@Test
 	@WithUserDetails("librarian")
-	@UseCase(id = "UC-002", scenario = "A2: Actor Has No Member Profile",
-			businessRules = { "BR-010", "C-009" })
+	@UseCase(id = "UC-002", scenario = "A2: Actor Has No Member Profile", businessRules = { "BR-010", "C-009" })
 	void borrow_service_throws_when_no_member_profile() {
 		// Use any book ID — the service must fail before even reaching the repository's
 		// availability check because the signed-in user has no member row.
@@ -302,8 +303,7 @@ class UC002BorrowBookTest extends AbstractBrowserlessTest {
 
 	@Test
 	@WithUserDetails("librarian")
-	@UseCase(id = "UC-002", scenario = "A2: Actor Has No Member Profile",
-			businessRules = { "BR-010", "C-009" })
+	@UseCase(id = "UC-002", scenario = "A2: Actor Has No Member Profile", businessRules = { "BR-010", "C-009" })
 	void borrow_dialog_shows_error_notification_when_no_member_profile() {
 		String prefix = UUID.randomUUID().toString();
 		long bookId = insertTestBook(prefix, 2);
@@ -335,9 +335,9 @@ class UC002BorrowBookTest extends AbstractBrowserlessTest {
 	 * {@link ai.unified.process.demo.book.library.loan.domain.LoanRepository#borrowAtomically(long, long)}
 	 * allows concurrent threads to read the same stale availability count before any
 	 * insert, producing more loans than {@code book.copies}.</li>
-	 * <li>Removing {@code @Transactional} from
-	 * {@link LoanService#borrow(long)} releases the lock between the
-	 * {@code SELECT FOR UPDATE} and the {@code INSERT}, producing the same race.</li>
+	 * <li>Removing {@code @Transactional} from {@link LoanService#borrow(long)} releases
+	 * the lock between the {@code SELECT FOR UPDATE} and the {@code INSERT}, producing
+	 * the same race.</li>
 	 * </ul>
 	 * // Canary: removing .forUpdate() or @Transactional causes this test to fail.
 	 *
@@ -349,9 +349,8 @@ class UC002BorrowBookTest extends AbstractBrowserlessTest {
 	 */
 	@ParameterizedTest
 	@CsvSource({ "1,5", "3,5" })
-	@UseCase(id = "UC-002", scenario = "A3: Concurrent Borrow Exhausts Last Copy",
-			businessRules = { "BR-009" })
-	void concurrent_borrow_creates_exactly_one_loan(int copies, int threads) throws InterruptedException {
+	@UseCase(id = "UC-002", scenario = "A3: Concurrent Borrow Exhausts Last Copy", businessRules = { "BR-009" })
+	void concurrent_borrow_creates_exactly_one_loan(int copies, int threads) throws Exception {
 		String prefix = UUID.randomUUID().toString();
 		long bookId = insertTestBook(prefix, copies);
 
@@ -365,8 +364,9 @@ class UC002BorrowBookTest extends AbstractBrowserlessTest {
 		List<Exception> unexpectedErrors = new CopyOnWriteArrayList<>();
 
 		ExecutorService executor = Executors.newFixedThreadPool(threads);
+		List<Future<?>> futures = new ArrayList<>();
 		for (int i = 0; i < threads; i++) {
-			executor.submit(() -> {
+			futures.add(executor.submit(() -> {
 				// Propagate the test-thread security context to the worker.
 				SecurityContextHolder.setContext(ctx);
 				try {
@@ -379,7 +379,7 @@ class UC002BorrowBookTest extends AbstractBrowserlessTest {
 				catch (Exception unexpected) {
 					unexpectedErrors.add(unexpected);
 				}
-			});
+			}));
 		}
 
 		// Release all threads simultaneously.
@@ -391,12 +391,18 @@ class UC002BorrowBookTest extends AbstractBrowserlessTest {
 			fail("Worker threads did not finish within 10 seconds");
 		}
 
+		// Rethrow anything a worker threw outside its own catch blocks (for example an
+		// Error, or a failure in setContext), which would otherwise be lost.
+		for (Future<?> future : futures) {
+			future.get();
+		}
+
 		assertThat(unexpectedErrors).as("unexpected exceptions in worker threads").isEmpty();
 
 		int expectedLoans = Math.min(copies, threads);
-		assertThat(countOpenLoans(bookId)).as("open loans must equal min(copies, threads)")
-			.isEqualTo(expectedLoans);
-		assertThat(noAvailableCount.get()).as("NoAvailableCopyException count must equal threads - min(copies, threads)")
+		assertThat(countOpenLoans(bookId)).as("open loans must equal min(copies, threads)").isEqualTo(expectedLoans);
+		assertThat(noAvailableCount.get())
+			.as("NoAvailableCopyException count must equal threads - min(copies, threads)")
 			.isEqualTo(threads - expectedLoans);
 	}
 
