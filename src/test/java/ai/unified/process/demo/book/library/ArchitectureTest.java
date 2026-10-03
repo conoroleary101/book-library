@@ -67,16 +67,20 @@ class ArchitectureTest {
 	}
 
 	/**
-	 * UC-002 BR-006: a loan is never removed by any application action, and a closed loan
-	 * is retained for at least 24 months (NFR-014). Until now that rule rested on there
-	 * happening to be no delete in the code; this makes adding one break the build.
+	 * UC-002 BR-006 and UC-003 BR-001: a loan is never removed by any application action,
+	 * and a closed loan is retained for at least 24 months (NFR-014). Both use cases
+	 * state the rule - UC-002 for the loan that is created, UC-003 for the loan that is
+	 * closed rather than deleted - and this test is the only thing enforcing either, so
+	 * both are named here. Removing or renumbering one must not silently orphan the
+	 * other. Until this rule existed the guarantee rested on there happening to be no
+	 * delete in the code; now adding one breaks the build.
 	 * <p>
 	 * ArchUnit sees the method call, not the table passed to it, so this forbids every
 	 * jOOQ delete and truncate in production code rather than only those against
-	 * {@code LOAN}. That is deliberately wider than BR-006 needs: nothing in production
-	 * deletes anything today, and a use case that genuinely must delete another table's
-	 * rows should narrow this rule — by package, say — as part of that work, rather than
-	 * remove it.
+	 * {@code LOAN}. That is deliberately wider than either rule needs: nothing in
+	 * production deletes anything today, and a use case that genuinely must delete
+	 * another table's rows should narrow this rule — by package, say — as part of that
+	 * work, rather than remove it.
 	 */
 	@Test
 	void production_code_never_deletes_rows_so_loans_are_retained() {
@@ -86,7 +90,8 @@ class ArchitectureTest {
 
 		noClasses().should()
 			.callMethodWhere(jooqDelete)
-			.because("UC-002 BR-006 requires loans to be retained; no production code may delete rows")
+			.because("UC-002 BR-006 and UC-003 BR-001 require loans to be retained; "
+					+ "no production code may delete rows")
 			.check(this.mainClasses);
 	}
 

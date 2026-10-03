@@ -1,8 +1,12 @@
 package ai.unified.process.demo.book.library.loan.domain;
 
 import org.jooq.DSLContext;
+import org.jooq.Records;
+import org.jooq.impl.DSL;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 import static ai.unified.process.demo.book.library.db.Tables.BOOK;
 import static ai.unified.process.demo.book.library.db.Tables.LOAN;
@@ -70,6 +74,43 @@ public class LoanRepository {
 		dsl.insertInto(LOAN, LOAN.MEMBER_ID, LOAN.BOOK_ID).values(memberId, bookId).execute();
 
 		return true;
+	}
+
+	/**
+	 * Lists the member's open loans, newest first, for UC-003 step 2.
+	 * @param memberId the patron whose loans to list
+	 * @return the open loans with the book each one is for; empty when the member has
+	 * none (alternative flow A1)
+	 */
+	public List<OpenLoan> findOpenLoansByMemberId(long memberId) {
+		return dsl.select(LOAN.ID, BOOK.TITLE, BOOK.AUTHOR, LOAN.BORROWED_AT)
+			.from(LOAN)
+			.join(BOOK)
+			.on(BOOK.ID.eq(LOAN.BOOK_ID))
+			.where(LOAN.MEMBER_ID.eq(memberId).and(LOAN.RETURNED_AT.isNull()))
+			.orderBy(LOAN.BORROWED_AT.desc())
+			.fetch(Records.mapping(OpenLoan::new));
+	}
+
+	/**
+	 * Records the return of one loan, in one indivisible step (UC-003 BR-005).
+	 * <p>
+	 * The conditions that the loan is still open and belongs to this member are part of
+	 * the same statement that sets the return, so two concurrent returns of one loan
+	 * close it once: the first matches the row, the second finds nothing left to match
+	 * (alternative flow A4). The loan is updated, never removed (BR-001).
+	 * @param memberId the patron closing the loan; a loan belonging to anyone else is
+	 * left untouched (BR-002)
+	 * @param loanId the loan to close
+	 * @return {@code true} when the loan was closed; {@code false} when it was already
+	 * closed, belongs to another patron, or does not exist
+	 */
+	public boolean closeLoanAtomically(long memberId, long loanId) {
+		int updated = dsl.update(LOAN)
+			.set(LOAN.RETURNED_AT, DSL.currentLocalDateTime())
+			.where(LOAN.ID.eq(loanId).and(LOAN.MEMBER_ID.eq(memberId)).and(LOAN.RETURNED_AT.isNull()))
+			.execute();
+		return updated == 1;
 	}
 
 }

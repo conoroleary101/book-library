@@ -4,8 +4,10 @@ import ai.unified.process.demo.book.library.core.security.CurrentUser;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 /**
- * Orchestrates the borrow action for UC-002.
+ * Orchestrates the borrow action for UC-002 and the return action for UC-003.
  * <p>
  * This service exists because borrowing spans two entities ({@code member} and
  * {@code loan}) and enforces an availability invariant that must be checked atomically
@@ -53,6 +55,47 @@ public class LoanService {
 		boolean created = loanRepository.borrowAtomically(memberId, bookId);
 		if (!created) {
 			throw new NoAvailableCopyException(bookId);
+		}
+	}
+
+	/**
+	 * Lists the signed-in member's open loans (UC-003 steps 1 and 2).
+	 * <p>
+	 * An account with no patron profile simply holds no loans, so it gets an empty list
+	 * and lands on alternative flow A1 rather than an error — there is nothing to explain
+	 * to someone who has borrowed nothing.
+	 * @return the member's open loans, newest first; empty when there are none
+	 */
+	@Transactional(readOnly = true)
+	public List<OpenLoan> findMyOpenLoans() {
+		Long memberId = loanRepository.findMemberIdByAppUserId(currentUser.requireAppUserId());
+		return memberId == null ? List.of() : loanRepository.findOpenLoansByMemberId(memberId);
+	}
+
+	/**
+	 * Records the return of one of the signed-in member's loans (UC-003 main success
+	 * scenario).
+	 * <p>
+	 * The loan is closed rather than removed (BR-001), and only a loan belonging to this
+	 * member can be closed (BR-002) — the member id is part of the closing statement, not
+	 * a check made before it.
+	 * @param loanId the loan to close
+	 * @throws NoMemberProfileException if the signed-in user has no linked patron profile
+	 * @throws LoanAlreadyClosedException if the loan is no longer open to this member
+	 * (alternative flows A2 and A4, BR-002)
+	 */
+	@Transactional
+	public void returnLoan(long loanId) {
+		long appUserId = currentUser.requireAppUserId();
+
+		Long memberId = loanRepository.findMemberIdByAppUserId(appUserId);
+		if (memberId == null) {
+			throw new NoMemberProfileException(appUserId);
+		}
+
+		boolean closed = loanRepository.closeLoanAtomically(memberId, loanId);
+		if (!closed) {
+			throw new LoanAlreadyClosedException(loanId);
 		}
 	}
 
