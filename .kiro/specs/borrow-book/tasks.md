@@ -103,8 +103,8 @@ No new Flyway migration is required — the `loan` table already exists at V004.
   - Run `.\mvnw compile` to confirm no build errors
   - Verify no ArchUnit violations are anticipated: `loan/ui` imports `loan/domain` (allowed); `catalog/ui` imports `loan/ui` through `BorrowDialog` — this is a cross-feature UI dependency and must be reviewed against the architecture rules in `structure.md` before proceeding
 
-- [ ] 9. Write browserless unit tests — `UC002BorrowBookTest`
-  - [ ] 9.1 Create `UC002BorrowBookTest.java` in `src/test/.../loan/ui/`
+- [x] 9. Write browserless unit tests — `UC002BorrowBookTest`
+  - [x] 9.1 Create `UC002BorrowBookTest.java` in `src/test/.../loan/ui/`
     - Extends `AbstractBrowserlessTest`
     - Class-level `@WithUserDetails("alice")` for happy path and most scenarios
     - `@Autowired LoanService loanService` and `@Autowired DSLContext dsl` for setup/teardown
@@ -143,8 +143,8 @@ No new Flyway migration is required — the `loan` table already exists at V004.
       - Both restored: PASS
       - Formatter check skipped with `-Dspring-javaformat.skip=true` for the mutation runs only
 
-- [ ] 10. Write parameterised property tests — `UC002BorrowBookParameterizedTest`
-  - [ ] 10.1 Create `UC002BorrowBookParameterizedTest.java` in `src/test/.../loan/domain/`
+- [x] 10. Write parameterised property tests — `UC002BorrowBookParameterizedTest`
+  - [x] 10.1 Create `UC002BorrowBookParameterizedTest.java` in `src/test/.../loan/domain/`
     - Extends `AbstractBrowserlessTest`
     - Class-level `@WithUserDetails("alice")`
     - `@Autowired LoanService loanService`, `@Autowired LoanRepository loanRepository`, `@Autowired DSLContext dsl`
@@ -168,8 +168,8 @@ No new Flyway migration is required — the `loan` table already exists at V004.
   - [ ]* 10.2 Verify `UC002BorrowBookParameterizedTest` passes
     - Run `.\mvnw test -Dtest=UC002BorrowBookParameterizedTest`
 
-- [ ] 11. Write Playwright E2E tests — `UC002BorrowBookIT`
-  - [ ] 11.1 Create `UC002BorrowBookIT.java` in `src/test/.../loan/ui/`
+- [x] 11. Write Playwright E2E tests — `UC002BorrowBookIT`
+  - [x] 11.1 Create `UC002BorrowBookIT.java` in `src/test/.../loan/ui/`
     - Extends `PlaywrightIT`
     - Signs in with seeded `alice` account (password `alice`)
     - `@Autowired DSLContext dsl` for test-book setup and teardown
@@ -191,10 +191,10 @@ No new Flyway migration is required — the `loan` table already exists at V004.
         - Assert no `<vaadin-button>` with text "Borrow" exists in the matching row
         - `@UseCase(id="UC-002", scenario="A1: No Copy Available", businessRules={"BR-009"})`
     - _Requirements: 1.1, 1.3, 1.4, 1.5_
-  - [ ]* 11.2 Verify `UC002BorrowBookIT` passes
+  - [x]* 11.2 Verify `UC002BorrowBookIT` passes
     - Run `.\mvnw verify -Dit.test=UC002BorrowBookIT`
 
-- [ ] 12. Final checkpoint — all tests pass
+- [x] 12. Final checkpoint — all tests pass
   - Run `.\mvnw spring-javaformat:apply` to ensure all files are formatted before the validate phase runs
   - Run `.\mvnw test` — browserless and ArchUnit checks must be green
   - Run `.\mvnw verify` — Playwright E2E and JaCoCo merge must complete without failures
