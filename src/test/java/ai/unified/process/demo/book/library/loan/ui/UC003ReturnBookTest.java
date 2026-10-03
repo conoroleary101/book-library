@@ -48,26 +48,21 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * Browserless unit tests for UC-003 Return Book.
  *
  * <p>
- * Most tests sign in as {@code alice}, who has a patron profile. The empty list is
- * reached two ways and both are covered, because two different code paths produce it: a
- * member who holds a profile and no loans (the repository finding nothing, A1), and an
- * account with no profile at all (the service short-circuiting, BR-008).
+ * Most tests sign in as {@code alice}, who has a patron profile. The list these tests act
+ * on is UC-004's subject and is covered by {@code UC004ViewMyLoansTest}; what is asserted
+ * here is the return — the action, its outcome, and whether it is offered at all.
  *
  * <p>
  * What each test proves:
  * <table border="1">
  * <caption>UC-003 coverage</caption>
  * <tr>
- * <td>Steps 1-2</td>
- * <td>{@code my_loans_lists_the_open_loan_with_its_book_and_borrow_date}</td>
- * </tr>
- * <tr>
  * <td>Steps 5-6, BR-001, BR-007</td>
  * <td>{@code returning_closes_the_loan_and_keeps_it_as_history}</td>
  * </tr>
  * <tr>
- * <td>Step 7</td>
- * <td>{@code the_returned_book_leaves_the_members_open_loans}</td>
+ * <td>Step 3</td>
+ * <td>{@code confirming_the_dialog_closes_the_loan}</td>
  * </tr>
  * <tr>
  * <td>BR-003</td>
@@ -78,10 +73,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * <td>BR-004</td>
  * <td>{@code returning_frees_a_copy_in_the_catalog},
  * {@code a_second_account_also_sees_the_freed_copy}</td>
- * </tr>
- * <tr>
- * <td>A1</td>
- * <td>{@code a_member_with_a_profile_and_no_loans_sees_the_empty_list}</td>
  * </tr>
  * <tr>
  * <td>A2</td>
@@ -97,11 +88,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * </tr>
  * <tr>
  * <td>BR-002</td>
- * <td>{@code another_patrons_loan_cannot_be_closed_and_is_not_listed}</td>
+ * <td>{@code another_patrons_loan_cannot_be_closed}</td>
  * </tr>
  * <tr>
  * <td>BR-008</td>
- * <td>{@code an_account_with_no_patron_profile_sees_the_empty_list}</td>
+ * <td>{@code no_return_action_is_offered_without_a_patron_profile}</td>
  * </tr>
  * </table>
  *
@@ -115,10 +106,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class UC003ReturnBookTest extends AbstractBrowserlessTest {
 
 	private static final int TITLE_COL = 0;
-
-	private static final int AUTHOR_COL = 1;
-
-	private static final int BORROWED_COL = 2;
 
 	private static final int RETURN_COL = 3;
 
@@ -244,6 +231,18 @@ class UC003ReturnBookTest extends AbstractBrowserlessTest {
 		return test(find(Grid.class).single()).getCellText(0, CATALOG_AVAILABLE_COL);
 	}
 
+	/** Signs in as the seeded librarian, the account that has no patron profile. */
+	private void signInAsLibrarian() {
+		Long userId = dsl.select(APP_USER.ID)
+			.from(APP_USER)
+			.where(APP_USER.USERNAME.eq("librarian"))
+			.fetchOne(APP_USER.ID);
+		assertThat(userId).as("the librarian account must exist").isNotNull();
+		var details = new AppUserDetails(userId, "librarian", "unused", Role.LIBRARIAN);
+		SecurityContextHolder.getContext()
+			.setAuthentication(new UsernamePasswordAuthenticationToken(details, null, details.getAuthorities()));
+	}
+
 	@SuppressWarnings("unchecked")
 	private Grid<OpenLoan> loansGrid() {
 		return find(Grid.class).single();
@@ -263,21 +262,6 @@ class UC003ReturnBookTest extends AbstractBrowserlessTest {
 	// -------------------------------------------------------------------------
 	// Main success scenario
 	// -------------------------------------------------------------------------
-
-	@Test
-	@UseCase(id = "UC-003")
-	void my_loans_lists_the_open_loan_with_its_book_and_borrow_date() {
-		String prefix = UUID.randomUUID().toString();
-		long bookId = insertTestBook(prefix, 1);
-		insertOpenLoan(aliceMemberId(), bookId);
-
-		navigate(MyLoansView.class);
-
-		var grid = loansGrid();
-		int row = rowOf(prefix + " Test Book");
-		assertThat(test(grid).getCellText(row, AUTHOR_COL)).isEqualTo("Test Author");
-		assertThat(test(grid).getCellText(row, BORROWED_COL)).isEqualTo(LocalDateTime.now().toLocalDate().toString());
-	}
 
 	@Test
 	@UseCase(id = "UC-003", businessRules = { "BR-001", "BR-007" })
@@ -342,25 +326,26 @@ class UC003ReturnBookTest extends AbstractBrowserlessTest {
 		assertThat(countOpenLoans(bookId)).isEqualTo(1);
 	}
 
+	/**
+	 * The claim here is that confirming the dialog closes the loan. That the row then
+	 * leaves the list is the list's behaviour, and belongs to UC-004 A2.
+	 */
 	@Test
 	@UseCase(id = "UC-003")
-	void the_returned_book_leaves_the_members_open_loans() {
+	void confirming_the_dialog_closes_the_loan() {
 		String prefix = UUID.randomUUID().toString();
 		long bookId = insertTestBook(prefix, 1);
 		insertOpenLoan(aliceMemberId(), bookId);
+		assertThat(countOpenLoans(bookId)).isEqualTo(1);
 
 		navigate(MyLoansView.class);
 		var grid = loansGrid();
-		int before = test(grid).size();
 		int row = rowOf(prefix + " Test Book");
-
 		test(grid).getCellText(row, RETURN_COL);
 		test(find(Button.class, grid).withText("Return").single()).click();
 		test(find(ConfirmDialog.class).single()).confirm();
 
-		// Step 7: one fewer row, and the returned book is no longer among them.
-		assertThat(test(grid).size()).isEqualTo(before - 1);
-		assertThatThrownBy(() -> rowOf(prefix + " Test Book")).isInstanceOf(AssertionError.class);
+		assertThat(countOpenLoans(bookId)).isZero();
 	}
 
 	@Test
@@ -416,41 +401,39 @@ class UC003ReturnBookTest extends AbstractBrowserlessTest {
 	}
 
 	// -------------------------------------------------------------------------
-	// Alternative flow A1 — no open loans
+	// BR-008 — no return action without a patron profile
 	// -------------------------------------------------------------------------
 
 	/**
-	 * A1 proper: the member holds a patron profile, so the empty list comes from the
-	 * repository finding no open loan - not from the service's no-profile shortcut, which
-	 * is BR-008 and a different code path.
+	 * BR-008 narrowed to its own half: the list an account without a patron profile sees
+	 * is UC-004's subject; what matters here is that no return is offered on it.
+	 * <p>
+	 * The positive control comes first so the negative assertion is not vacuous — an
+	 * absent button proves nothing unless the same lookup is shown finding one.
 	 */
 	@Test
-	@UseCase(id = "UC-003", scenario = "A1: Member Has No Open Loans")
-	void a_member_with_a_profile_and_no_loans_sees_the_empty_list() {
-		String prefix = UUID.randomUUID().toString();
-		Patron patron = insertOtherMember(prefix);
-		signInAs(patron, prefix);
+	@UseCase(id = "UC-003", businessRules = { "BR-008" })
+	void no_return_action_is_offered_without_a_patron_profile() {
+		// alice holds seeded loans, so the action is offered to her.
+		navigate(MyLoansView.class);
+		var held = loansGrid();
+		assertThat(test(held).size()).isPositive();
+		test(held).getCellText(0, RETURN_COL);
+		assertThat(find(Button.class, held).withText("Return").exists())
+			.as("a member holding loans is offered the return")
+			.isTrue();
 
+		// An account with no patron profile holds none, so none is offered. Routing
+		// via another view forces the loans view to be rebuilt for the new account.
+		signInAsLibrarian();
+		navigate(CatalogView.class);
 		navigate(MyLoansView.class);
 
-		var grid = loansGrid();
-		assertThat(test(grid).size()).isZero();
-		assertThat(grid.getEmptyStateText()).isEqualTo("You have no books on loan.");
-	}
-
-	/**
-	 * BR-008: an account with no patron profile owns no loan, and reaches the same empty
-	 * list by the service short-circuit rather than by a query returning nothing.
-	 */
-	@Test
-	@WithUserDetails("librarian")
-	@UseCase(id = "UC-003", scenario = "A1: Member Has No Open Loans", businessRules = { "BR-008" })
-	void an_account_with_no_patron_profile_sees_the_empty_list() {
-		navigate(MyLoansView.class);
-
-		var grid = loansGrid();
-		assertThat(test(grid).size()).isZero();
-		assertThat(grid.getEmptyStateText()).isEqualTo("You have no books on loan.");
+		var none = loansGrid();
+		assertThat(test(none).size()).isZero();
+		assertThat(find(Button.class, none).withText("Return").exists())
+			.as("no return is offered without a patron profile")
+			.isFalse();
 	}
 
 	// -------------------------------------------------------------------------
@@ -589,22 +572,21 @@ class UC003ReturnBookTest extends AbstractBrowserlessTest {
 	// BR-002 — a member closes only their own loans
 	// -------------------------------------------------------------------------
 
+	/**
+	 * The claim here is that the close is refused. That such a loan is also absent from
+	 * the list is the list's behaviour, and belongs to UC-004 BR-001.
+	 */
 	@Test
 	@UseCase(id = "UC-003", businessRules = { "BR-002" })
-	void another_patrons_loan_cannot_be_closed_and_is_not_listed() {
+	void another_patrons_loan_cannot_be_closed() {
 		String prefix = UUID.randomUUID().toString();
 		long bookId = insertTestBook(prefix, 1);
 		Patron other = insertOtherMember(prefix);
 		long otherLoanId = insertOpenLoan(other.memberId(), bookId);
 
-		// Not offered: the other patron's loan is not on alice's list.
-		navigate(MyLoansView.class);
-		assertThatThrownBy(() -> rowOf(prefix + " Test Book")).isInstanceOf(AssertionError.class);
-
-		// Not reachable either: asking for it directly is refused.
 		assertThatThrownBy(() -> loanService.returnLoan(otherLoanId)).isInstanceOf(LoanAlreadyClosedException.class);
 
-		// And the other patron's loan is untouched.
+		// The other patron's loan is untouched.
 		assertThat(countOpenLoans(bookId)).isEqualTo(1);
 	}
 

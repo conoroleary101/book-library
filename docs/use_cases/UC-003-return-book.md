@@ -19,39 +19,40 @@
 
 - Actor is signed in with a member or a librarian account
 - Actor has a patron profile, so loans can belong to them (UC-002 BR-002)
+- Member is viewing their open loans (UC-004 View My Loans)
 
 ## Main Success Scenario
 
-1. Member opens the list of books they currently have on loan.
-2. System shows each open loan with the book's title, its author, and when the copy was taken out.
-3. Member starts the return action for one of those loans and confirms the request.
-4. System confirms that the loan is still open and belongs to the member.
-5. System closes the loan, recording when the copy came back and keeping the loan as history.
-6. System confirms to the member that the return has been recorded.
-7. System no longer lists the book among the member's open loans, the loan now counting as history, and the freed copy is reflected in the catalog from that moment on.
+1. Member starts the return action for one of their open loans and confirms the request.
+2. System confirms that the loan is still open and belongs to the member.
+3. System closes the loan, recording when the copy came back and keeping the loan as history.
+4. System confirms to the member that the return has been recorded.
+5. System no longer lists the book among the member's open loans, the loan now counting as history, and the freed copy is reflected in the catalog from that moment on.
 
 ## Alternative Flows
 
-### A1: Member Has No Open Loans
+### A1: Member Has Nothing to Return
 
-**Trigger:** The member holds no open loan when the list is shown (step 2)  
+**Trigger:** The member holds no open loan, so there is no return to start (step 1)  
 **Flow:**
 
-1. System shows an empty list and states that the member has no books on loan.
-2. Use case ends.
+1. System offers no return action, there being no loan to offer one on.
+2. Member sees there is nothing to return.
+3. Use case ends.
 
 ### A2: The Loan Has Already Been Closed
 
-**Trigger:** The loan was returned after the list was drawn and before the request arrived (step 4)  
+**Trigger:** The loan was returned after the list was drawn and before the request arrived (step 2)  
 **Flow:**
 
 1. System tells the member that the book has already been returned.
 2. System closes no loan a second time and leaves the recorded return untouched.
-3. Use case continues at step 1.
+3. System redraws the member's open loans (UC-004 View My Loans), without the entry that is no longer open.
+4. Use case ends.
 
 ### A3: Member Abandons the Confirmation
 
-**Trigger:** Member cancels the confirmation instead of confirming it (step 3)  
+**Trigger:** Member cancels the confirmation instead of confirming it (step 1)  
 **Flow:**
 
 1. System closes the confirmation and takes no further action.
@@ -60,7 +61,7 @@
 
 ### A4: Concurrent Return of the Same Loan
 
-**Trigger:** The same loan is returned twice at once, from two screens or two devices (step 4)  
+**Trigger:** The same loan is returned twice at once, from two screens or two devices (step 2)  
 **Flow:**
 
 1. System closes the loan for whichever request found it open first.
@@ -116,30 +117,27 @@ Returning a book never creates a fee, fine, or payment of any kind (C-013). Beca
 Once closed, a loan stops being an open loan but remains part of the loan history, with both the moment it was taken out and the moment it came back, so a librarian can trace who borrowed a book and when (FR-009).
 
 
-### BR-008: An Account Without a Patron Profile Holds No Loans
+### BR-008: No Return Action Is Offered Without a Patron Profile
 
-An account with no patron profile owns no loan, so its list is empty and no return action is offered anywhere. It reaches A1 by the ordinary route — nothing to show — rather than by a failure of its own.
+An account with no patron profile is never shown a return action, because it holds no loan for one to be offered on (UC-004 BR-004).
 
 This is deliberately not an alternative flow, which is where UC-002 puts the same state (UC-002 A2). The difference is where the action sits: borrowing is offered from the catalog, which every signed-in account can reach, so the request is made before ownership is known and has to be refused. Returning is offered only from a loan the account already holds, so an account with no profile is never shown the action and has nothing to be refused.
 
 Should a future entry point ever offer the return before ownership is known, the request is refused and the actor told that returning is not available for their account — the same answer UC-002 gives in its A2. No member reaches that message today, and no flow of this use case produces it.
 ## Open Points
 
-1. **The entry point depends on UC-004 View My Loans**, which is neither specified nor
-   built. Steps 1 and 2 describe that list; if UC-004 settles on a different shape, those
-   two steps follow it rather than the other way round.
-2. **The `Loan` record added for UC-002 is currently unused by any production code**, and
+1. **The `Loan` record added for UC-002 is currently unused by any production code**, and
    this use case is its likely first consumer: closing a loan means reading one, and the
    record already carries exactly the fields these steps need. The implementation should
    either use it or say why a different type is warranted — defining a second type with
    the same meaning, and leaving the first one dead, is the outcome to avoid.
-3. **BR-006 and Post-S-5 are schema-guaranteed, not asserted.** No loan column and no
+2. **BR-006 and Post-S-5 are schema-guaranteed, not asserted.** No loan column and no
    entity exists that could hold a fee or a fine, so there is nothing for a test to
    observe. UC-002 records the same situation for the same rule in its own Open Points.
-4. **The confirmation at step 3 mirrors UC-002.** Borrowing asks the member to confirm, so
+3. **The confirmation at step 1 mirrors UC-002.** Borrowing asks the member to confirm, so
    returning does too, and A3 exists for the same reason UC-002's A4 does. If the borrow
    confirmation is ever dropped, this should follow it.
-5. **There is no TC-003 test case document, deliberately.** Writing test cases is not part
+4. **There is no TC-003 test case document, deliberately.** Writing test cases is not part
    of the nine-step chain this project follows, and neither UC-001 nor UC-002 has one
    either, so UC-003 is not the exception. A journey document would also be the wrong
    shape for a single use case: borrowing and returning only make sense end to end, so the
@@ -156,3 +154,9 @@ Should a future entry point ever offer the return before ownership is known, the
    book, so this will likely be revisited; granting it would need a new functional
    requirement, a change to BR-002, and an alternative flow for choosing whose loan is
    being closed.
+2. **The list this use case acts on belongs to UC-004 View My Loans.** This specification
+   used to restate it as steps 1 and 2, written before UC-004 existed. UC-004 now
+   specifies the list — its columns, its ordering, and what an empty one shows — and
+   this use case begins once the member is looking at it, which is why that is a
+   precondition rather than a step. The shape UC-004 settled on is the one these steps
+   already assumed, so nothing changed here except the duplication going away.

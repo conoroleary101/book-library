@@ -7,12 +7,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * Orchestrates the borrow action for UC-002 and the return action for UC-003.
+ * Orchestrates the borrow action for UC-002, the return action for UC-003, and the loan
+ * listing behind UC-004 View My Loans.
  * <p>
- * This service exists because borrowing spans two entities ({@code member} and
- * {@code loan}) and enforces an availability invariant that must be checked atomically
- * (BR-009). The view must go through this service exclusively and must not call
- * {@link LoanRepository} directly.
+ * This service exists because borrowing and returning each span two entities
+ * ({@code member} and {@code loan}) and enforce invariants that must hold atomically
+ * (UC-002 BR-001, UC-003 BR-005). The listing has no invariant of its own but is scoped
+ * by the signed-in member here rather than in the view (UC-004 BR-001). Views must go
+ * through this service exclusively and must not call {@link LoanRepository} directly.
  */
 @Service
 public class LoanService {
@@ -59,11 +61,11 @@ public class LoanService {
 	}
 
 	/**
-	 * Lists the signed-in member's open loans (UC-003 steps 1 and 2).
+	 * Lists the signed-in member's open loans (UC-004 steps 2 and 3).
 	 * <p>
 	 * An account with no patron profile simply holds no loans, so it gets an empty list
-	 * and lands on alternative flow A1 rather than an error — there is nothing to explain
-	 * to someone who has borrowed nothing.
+	 * and lands on UC-004 A1 rather than an error — there is nothing to explain to
+	 * someone who has borrowed nothing (UC-004 BR-004).
 	 * @return the member's open loans, newest first; empty when there are none
 	 */
 	@Transactional(readOnly = true)

@@ -6,6 +6,8 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -14,35 +16,36 @@ import jakarta.annotation.security.RolesAllowed;
 import java.util.List;
 
 /**
- * UC-003 Return Book.
+ * UC-004 View My Loans.
  *
  * <p>
- * Lists the books the signed-in member currently has on loan and lets them return one.
- * When the list is empty the member is told they have nothing on loan (alternative flow
- * A1); otherwise each row offers a Return action, which opens {@link ReturnDialog}.
+ * Shows each book the signed-in member currently has out, with its title, its author and
+ * when the copy was taken, most recently taken first (UC-004 steps 3 and 4, UC-004
+ * BR-003). An empty list tells the member they have nothing on loan rather than reading
+ * as an error (UC-004 A1).
  *
  * <p>
- * Open to any signed-in user. A librarian holding a patron profile sees and returns their
- * own loans exactly as a member does, and gains nothing over another patron's loans — the
- * resolved point in the specification, and {@code LoanService} scopes every query and
- * every close by the signed-in member (BR-002).
+ * The return action on each row belongs to UC-003 Return Book, not to this use case. This
+ * view offers it and refreshes itself afterwards, which is UC-004 A2; everything the
+ * return itself does is UC-003's.
  *
  * <p>
- * Scope note: steps 1 and 2 of UC-003 need a list of the member's open loans, so this
- * view provides one. That listing is also the subject of UC-004 View My Loans, which is
- * not yet specified. This view is the minimum UC-003 requires; UC-004 should take it over
- * and extend it rather than a second list being built beside it.
+ * Open to any signed-in user. A librarian holding a patron profile sees their own loans
+ * exactly as a member does and gains nothing over another patron's, because
+ * {@code LoanService} scopes the query by the signed-in member (UC-004 BR-001). An
+ * account with no patron profile holds no loan and so sees the empty list (UC-004
+ * BR-004).
  *
  * <p>
- * On a successful return the grid is refreshed, so the returned book leaves the list
- * without a manual reload. The book's freed copy shows in the catalog, whose availability
- * is derived on every query (BR-004) and so is current the next time the catalog is read.
+ * The list is read when the view is built and again after a return, and does not update
+ * itself while it sits on screen (UC-004 BR-005) — a loan closed elsewhere lingers until
+ * the list is opened again (UC-004 A3).
  */
 @RolesAllowed({ "MEMBER", "LIBRARIAN" })
 @Route("my-loans")
 @PageTitle("My Loans")
 @Menu(title = "My Loans", order = 2, icon = "vaadin:bookmark")
-public class MyLoansView extends VerticalLayout {
+public class MyLoansView extends VerticalLayout implements BeforeEnterObserver {
 
 	private final transient LoanService loanService;
 
@@ -53,14 +56,24 @@ public class MyLoansView extends VerticalLayout {
 		setSizeFull();
 		configureGrid();
 		add(grid);
+	}
+
+	/**
+	 * Reads the loans on every navigation here, not only when the view is first built.
+	 * Reading in the constructor alone left the list showing whatever it held when it was
+	 * created, so choosing My Loans while already on it kept a loan closed elsewhere on
+	 * screen (UC-004 A3, UC-004 BR-005).
+	 */
+	@Override
+	public void beforeEnter(BeforeEnterEvent event) {
 		refresh();
 	}
 
 	private void configureGrid() {
 		grid.addColumn(OpenLoan::title).setHeader("Title").setAutoWidth(true).setFlexGrow(1);
 		grid.addColumn(OpenLoan::author).setHeader("Author").setAutoWidth(true);
-		// The date alone: a loan has no due date and no time of day worth showing
-		// (BR-006).
+		// The date alone: a loan has no due date (UC-002 BR-004, C-019) and no time of
+		// day worth showing.
 		grid.addColumn(loan -> loan.borrowedAt().toLocalDate().toString()).setHeader("Borrowed").setAutoWidth(true);
 		configureReturnColumn();
 		// A1: the member has nothing out, which is an ordinary state rather than an

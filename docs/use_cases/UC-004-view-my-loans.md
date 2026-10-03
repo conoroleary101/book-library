@@ -6,14 +6,18 @@
 **Use Case Name:** View My Loans  
 **Primary Actor:** Member  
 **Goal:** See which books are currently out on loan, so the member knows what is still to be returned  
-**Status:** Implemented
+**Status:** Tested
 
-> **The list exists already, built as part of UC-003 Return Book.** UC-003 needs this list
-> to offer the return action, so it was implemented first and its steps 1 and 2 describe
-> the same screen. This specification is what those steps defer to. The shape it settles
-> on — title, author, when the copy was taken out, newest first — is the one already built,
-> so UC-003 needs no change. The tests that exercise the list are currently attributed to
-> UC-003; none names UC-004.
+> **Tested.** Every step, alternative flow, postcondition and business rule is exercised,
+> the empty list by both of the paths that produce it, with step 3 and the empty list also
+> driven through a browser. Step 4 is the member reading what is on screen and has nothing
+> to assert.
+>
+> **The list was built before it was specified, as part of UC-003 Return Book.** UC-003
+> needed it to offer the return action, so it came first; this specification is what
+> UC-003 now defers to, as a precondition rather than steps of its own. The shape settled
+> on here — title, author, when the copy was taken out, newest first — is the one already
+> built, so UC-003 needed no change. How the tests for the two are divided is Open Point 3.
 
 ## Preconditions
 
@@ -100,7 +104,10 @@ The list shows the loans as they stood when it was drawn, and refreshes after an
    UC-003 BR-004), so there is nothing to warn about, and availability belongs to the
    catalog. If a count is ever wanted on this screen, it would be a change to BR-003 of
    UC-003 as much as to this use case.
-3. **No test names UC-004.** The list is exercised by the UC-003 suite, which annotates
-   those tests against UC-003's steps 1 and 2. The behaviour is covered; the trace is not.
-   Attributing them — or adding a test class for this use case — is what the status needs
-   before it can move past Implemented.
+3. **The list and the return share one screen, so their tests sit in two classes.**
+   `UC004ViewMyLoansTest` and `UC004ViewMyLoansIT` own what the list does;
+   `UC003ReturnBookTest` and `UC003ReturnBookIT` own the return offered on it. Where a
+   single action had something to say about both — a row leaving the list after a return,
+   a loan that is neither listed nor closable — the test was split so each half is claimed
+   by the use case it belongs to. Anyone adding a test on this screen has to decide which
+   of the two it is asserting before deciding where it goes.

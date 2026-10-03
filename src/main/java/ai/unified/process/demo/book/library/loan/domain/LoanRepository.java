@@ -13,12 +13,17 @@ import static ai.unified.process.demo.book.library.db.Tables.LOAN;
 import static ai.unified.process.demo.book.library.db.Tables.MEMBER;
 
 /**
- * Data-access methods for UC-002 Borrow Book.
+ * Data-access methods for the loan feature: UC-002 Borrow Book, UC-003 Return Book, and
+ * the listing behind UC-004 View My Loans.
  * <p>
- * {@link #borrowAtomically(long, long)} is the core method: it locks the book row,
- * re-checks availability, and inserts the loan row in one transaction step (BR-009). The
- * caller ({@link LoanService}) must invoke it inside a Spring {@code @Transactional}
- * method so the lock is released on commit.
+ * Two methods carry an invariant rather than just a query.
+ * {@link #borrowAtomically(long, long)} locks the book row, re-checks availability, and
+ * inserts the loan in one step (UC-002 BR-001); {@link #closeLoanAtomically(long, long)}
+ * puts "still open" and "belongs to this member" in the same statement that records the
+ * return (UC-003 BR-005, UC-003 BR-002). Both must run inside a Spring
+ * {@code @Transactional} method, so the lock is released on commit.
+ * <p>
+ * {@link #findOpenLoansByMemberId(long)} is a plain read, and belongs to UC-004.
  */
 @Repository
 public class LoanRepository {
@@ -77,10 +82,11 @@ public class LoanRepository {
 	}
 
 	/**
-	 * Lists the member's open loans, newest first, for UC-003 step 2.
+	 * Lists the member's open loans, newest first, for UC-004 step 3. The ordering is
+	 * UC-004 BR-003 and the scoping by member is UC-004 BR-001.
 	 * @param memberId the patron whose loans to list
 	 * @return the open loans with the book each one is for; empty when the member has
-	 * none (alternative flow A1)
+	 * none (UC-004 A1)
 	 */
 	public List<OpenLoan> findOpenLoansByMemberId(long memberId) {
 		return dsl.select(LOAN.ID, BOOK.TITLE, BOOK.AUTHOR, LOAN.BORROWED_AT)

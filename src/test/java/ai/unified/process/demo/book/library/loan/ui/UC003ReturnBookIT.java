@@ -45,8 +45,6 @@ class UC003ReturnBookIT extends PlaywrightIT {
 
 	private static final String ALICE = "alice";
 
-	private static final String LIBRARIAN = "librarian";
-
 	/** Column indices in the My Loans grid (0-based). */
 	private static final int TITLE_COL = 0;
 
@@ -263,22 +261,6 @@ class UC003ReturnBookIT extends PlaywrightIT {
 			// The loan is still listed.
 			assertThat(new GridPw(page).getRenderedRowCount()).isEqualTo(before);
 			PlaywrightAssertions.assertThat(page.getByText(title).first()).isVisible();
-		}
-
-	}
-
-	@Nested
-	@DisplayName("A1: nothing on loan")
-	class NothingOnLoan {
-
-		@Test
-		@DisplayName("BR-008: an account with no patron profile sees the empty state")
-		@UseCase(id = "UC-003", scenario = "A1: Member Has No Open Loans", businessRules = { "BR-008" })
-		void an_account_with_no_patron_profile_sees_the_empty_state() {
-			signInAt("my-loans", LIBRARIAN);
-
-			assertThat(new GridPw(page).getRenderedRowCount()).isZero();
-			PlaywrightAssertions.assertThat(page.getByText("You have no books on loan.")).isVisible();
 		}
 
 	}
