@@ -160,7 +160,8 @@ class UC002BorrowBookTest extends AbstractBrowserlessTest {
 	}
 
 	@Test
-	@UseCase(id = "UC-002", scenario = "A1: No Copy Available", businessRules = { "BR-008", "BR-009" })
+	@UseCase(id = "UC-002", scenario = "A1: No Copy Is Available at Borrow Time",
+			businessRules = { "UC-001 BR-008", "BR-009" })
 	void borrow_button_absent_for_unavailable_book() {
 		String prefix = UUID.randomUUID().toString();
 		long bookId = insertTestBook(prefix, 1);
@@ -178,7 +179,7 @@ class UC002BorrowBookTest extends AbstractBrowserlessTest {
 	// -------------------------------------------------------------------------
 
 	@Test
-	@UseCase(id = "UC-002", scenario = "Main Success Scenario", businessRules = { "FR-005" })
+	@UseCase(id = "UC-002", scenario = "Main Success Scenario")
 	void successful_borrow_shows_success_notification() {
 		String prefix = UUID.randomUUID().toString();
 		long bookId = insertTestBook(prefix, 2);
@@ -204,7 +205,7 @@ class UC002BorrowBookTest extends AbstractBrowserlessTest {
 	}
 
 	@Test
-	@UseCase(id = "UC-002", scenario = "Main Success Scenario", businessRules = { "BR-011" })
+	@UseCase(id = "UC-002", scenario = "Main Success Scenario", businessRules = { "BR-003" })
 	void successful_borrow_updates_availability_in_grid() {
 		String prefix = UUID.randomUUID().toString();
 		insertTestBook(prefix, 2);
@@ -229,7 +230,7 @@ class UC002BorrowBookTest extends AbstractBrowserlessTest {
 	// -------------------------------------------------------------------------
 
 	@Test
-	@UseCase(id = "UC-002", scenario = "A1: No Copy Available", businessRules = { "BR-009" })
+	@UseCase(id = "UC-002", scenario = "A1: No Copy Is Available at Borrow Time", businessRules = { "BR-001" })
 	void borrow_service_throws_when_no_copy_available() {
 		String prefix = UUID.randomUUID().toString();
 		long bookId = insertTestBook(prefix, 1);
@@ -244,7 +245,7 @@ class UC002BorrowBookTest extends AbstractBrowserlessTest {
 	}
 
 	@Test
-	@UseCase(id = "UC-002", scenario = "A1: No Copy Available", businessRules = { "BR-009" })
+	@UseCase(id = "UC-002", scenario = "A1: No Copy Is Available at Borrow Time", businessRules = { "BR-001" })
 	void borrow_dialog_shows_error_notification_when_no_copy_available() {
 		String prefix = UUID.randomUUID().toString();
 		long bookId = insertTestBook(prefix, 1);
@@ -269,7 +270,7 @@ class UC002BorrowBookTest extends AbstractBrowserlessTest {
 	// -------------------------------------------------------------------------
 
 	@Test
-	@UseCase(id = "UC-002", scenario = "Main Success Scenario", businessRules = { "BR-012", "C-019" })
+	@UseCase(id = "UC-002", scenario = "Main Success Scenario", businessRules = { "BR-004" })
 	void loan_row_has_null_returned_at_and_no_due_date() {
 		String prefix = UUID.randomUUID().toString();
 		long bookId = insertTestBook(prefix, 1);
@@ -291,7 +292,7 @@ class UC002BorrowBookTest extends AbstractBrowserlessTest {
 
 	@Test
 	@WithUserDetails("librarian")
-	@UseCase(id = "UC-002", scenario = "A2: Actor Has No Member Profile", businessRules = { "BR-010", "C-009" })
+	@UseCase(id = "UC-002", scenario = "A2: Actor Has No Patron Profile", businessRules = { "BR-002" })
 	void borrow_service_throws_when_no_member_profile() {
 		// Use any book ID — the service must fail before even reaching the repository's
 		// availability check because the signed-in user has no member row.
@@ -303,7 +304,7 @@ class UC002BorrowBookTest extends AbstractBrowserlessTest {
 
 	@Test
 	@WithUserDetails("librarian")
-	@UseCase(id = "UC-002", scenario = "A2: Actor Has No Member Profile", businessRules = { "BR-010", "C-009" })
+	@UseCase(id = "UC-002", scenario = "A2: Actor Has No Patron Profile", businessRules = { "BR-002" })
 	void borrow_dialog_shows_error_notification_when_no_member_profile() {
 		String prefix = UUID.randomUUID().toString();
 		long bookId = insertTestBook(prefix, 2);
@@ -349,7 +350,7 @@ class UC002BorrowBookTest extends AbstractBrowserlessTest {
 	 */
 	@ParameterizedTest
 	@CsvSource({ "1,5", "3,5" })
-	@UseCase(id = "UC-002", scenario = "A3: Concurrent Borrow Exhausts Last Copy", businessRules = { "BR-009" })
+	@UseCase(id = "UC-002", scenario = "A3: Concurrent Borrow Takes the Last Copy", businessRules = { "BR-001" })
 	void concurrent_borrow_creates_exactly_one_loan(int copies, int threads) throws Exception {
 		String prefix = UUID.randomUUID().toString();
 		long bookId = insertTestBook(prefix, copies);

@@ -143,7 +143,7 @@ class UC002BorrowBookIT extends PlaywrightIT {
 	 * page reload (BR-011).
 	 */
 	@Test
-	@UseCase(id = "UC-002", scenario = "Main success scenario", businessRules = { "FR-005", "BR-011" })
+	@UseCase(id = "UC-002", scenario = "Main Success Scenario", businessRules = { "BR-003" })
 	void member_can_borrow_available_book() {
 		String prefix = UUID.randomUUID().toString();
 		insertTestBook(prefix, 2);
@@ -188,7 +188,7 @@ class UC002BorrowBookIT extends PlaywrightIT {
 	 * rendered in the catalog row (BR-009).
 	 */
 	@Test
-	@UseCase(id = "UC-002", scenario = "A1: No Copy Available", businessRules = { "BR-009" })
+	@UseCase(id = "UC-002", scenario = "A1: No Copy Is Available at Borrow Time", businessRules = { "BR-009" })
 	void no_borrow_button_for_unavailable_book() {
 		String prefix = UUID.randomUUID().toString();
 		long bookId = insertTestBook(prefix, 1);
