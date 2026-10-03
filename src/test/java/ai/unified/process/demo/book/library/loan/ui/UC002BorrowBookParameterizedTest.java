@@ -121,7 +121,7 @@ class UC002BorrowBookParameterizedTest extends AbstractBrowserlessTest {
 	 */
 	@ParameterizedTest
 	@CsvSource({ "1,0", "2,1", "5,3", "10,9" })
-	@UseCase(id = "UC-002", scenario = "Main Success Scenario", businessRules = { "BR-001" })
+	@UseCase(id = "UC-002", scenario = "Main Success Scenario", businessRules = { "BR-001", "BR-007", "BR-008" })
 	void borrow_succeeds_when_copy_is_available(int copies, int existingLoans) {
 		String prefix = UUID.randomUUID().toString();
 		long bookId = insertTestBook(prefix, copies);

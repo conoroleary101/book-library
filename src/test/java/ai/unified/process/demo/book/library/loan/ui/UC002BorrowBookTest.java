@@ -280,9 +280,13 @@ class UC002BorrowBookTest extends AbstractBrowserlessTest {
 
 		var loan = dsl.selectFrom(LOAN).where(LOAN.BOOK_ID.eq(bookId)).fetchOne();
 		assertThat(loan).isNotNull();
-		// BR-012: no due date — returned_at is null while the copy is still on loan.
+		// BR-002: the loan belongs to the borrowing patron's own profile. Without this
+		// the whole suite passes even if the loan is written against the wrong member,
+		// because every other assertion only counts rows for the book.
+		assertThat(loan.getMemberId()).isEqualTo(aliceMemberId());
+		// BR-004: no due date — the loan stays open until a return is recorded.
 		assertThat(loan.getReturnedAt()).isNull();
-		// C-019: borrowed_at is populated automatically via the column DEFAULT.
+		// The borrow time is populated automatically by the column default.
 		assertThat(loan.getBorrowedAt()).isNotNull();
 	}
 

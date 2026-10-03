@@ -1,7 +1,11 @@
 package ai.unified.process.demo.book.library;
 
+import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClasses;
+import com.tngtech.archunit.core.domain.JavaMethodCall;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
+import com.tngtech.archunit.core.importer.ImportOption;
+import org.jooq.DSLContext;
 import org.junit.jupiter.api.Test;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
@@ -31,6 +35,14 @@ class ArchitectureTest {
 
 	private final JavaClasses classes = new ClassFileImporter().importPackages(PACKAGE_ROOT);
 
+	/**
+	 * Production classes only. Tests legitimately delete the rows they create, so the
+	 * retention rule below must not see them.
+	 */
+	private final JavaClasses mainClasses = new ClassFileImporter()
+		.withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+		.importPackages(PACKAGE_ROOT);
+
 	@Test
 	void layered_architecture_check() {
 		layeredArchitecture().consideringAllDependencies()
@@ -52,6 +64,30 @@ class ArchitectureTest {
 			.accessClassesThat()
 			.resideInAnyPackage(GREETING_MODULE)
 			.check(classes);
+	}
+
+	/**
+	 * UC-002 BR-006: a loan is never removed by any application action, and a closed loan
+	 * is retained for at least 24 months (NFR-014). Until now that rule rested on there
+	 * happening to be no delete in the code; this makes adding one break the build.
+	 * <p>
+	 * ArchUnit sees the method call, not the table passed to it, so this forbids every
+	 * jOOQ delete and truncate in production code rather than only those against
+	 * {@code LOAN}. That is deliberately wider than BR-006 needs: nothing in production
+	 * deletes anything today, and a use case that genuinely must delete another table's
+	 * rows should narrow this rule — by package, say — as part of that work, rather than
+	 * remove it.
+	 */
+	@Test
+	void production_code_never_deletes_rows_so_loans_are_retained() {
+		DescribedPredicate<JavaMethodCall> jooqDelete = DescribedPredicate.describe("a jOOQ delete or truncate",
+				call -> call.getTargetOwner().isAssignableTo(DSLContext.class)
+						&& (call.getName().startsWith("delete") || call.getName().startsWith("truncate")));
+
+		noClasses().should()
+			.callMethodWhere(jooqDelete)
+			.because("UC-002 BR-006 requires loans to be retained; no production code may delete rows")
+			.check(this.mainClasses);
 	}
 
 	@Test
